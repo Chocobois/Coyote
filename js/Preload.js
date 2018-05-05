@@ -5,7 +5,7 @@ Global.Preload = function() {};
 
 Global.Preload.prototype = {
 	preload: function () {
-		
+
 		this.game.stage.backgroundColor = '#111111';
 
 
@@ -15,18 +15,29 @@ Global.Preload.prototype = {
 
 
 		/* Sprites */
-		this.load.image( 'cool', 'assets/sprites/cool.png' );
+
+		// Coyote
+		this.load.image( 'coyote', 'assets/sprites/coyote.png' );
 		this.load.image( 'coyotecrouch', 'assets/sprites/coyotecrouch.png' );
 		this.load.image( 'coyotekick1', 'assets/sprites/coyotekick1.png' );
 		this.load.image( 'coyotekick2', 'assets/sprites/coyotekick2.png' );
 		this.load.image( 'coyotekick3', 'assets/sprites/coyotekick3.png' );
-		this.load.image( 'coyote', 'assets/sprites/coyote.png' );
 		this.load.image( 'coyotetrick1', 'assets/sprites/coyotetrick1.png' );
+
+		// Background
+		this.load.image( 'sky', 'assets/sprites/sky.png' );
+		this.load.image( 'clouds', 'assets/sprites/clouds.png' );
 		this.load.image( 'desert', 'assets/sprites/desert.png' );
+
+		// Objects
 		this.load.image( 'halfpipe', 'assets/sprites/halfpipe.png' );
 		this.load.image( 'saloon', 'assets/sprites/saloon.png' );
+		this.load.image( 'floor1', 'assets/sprites/floor1.png' );
+		this.load.image( 'floor2', 'assets/sprites/floor2.png' );
+
+		// Splash
+		this.load.image( 'cool', 'assets/sprites/cool.png' );
 		this.load.image( 'slick', 'assets/sprites/slick.png' );
-		//this.load.spritesheet( 'name', 'assets/sprites/sheet.png', 32, 32 );
 
 
 		/* Audio */

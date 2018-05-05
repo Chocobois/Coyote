@@ -2,9 +2,14 @@ var Global = Global || {};
 
 var SCREEN_WIDTH = 900;
 var SCREEN_HEIGHT = 640;
+
 var GRAPHICS_SCALE = 8;
 var GAME_WIDTH = SCREEN_WIDTH / GRAPHICS_SCALE;
 var GAME_HEIGHT = SCREEN_HEIGHT / GRAPHICS_SCALE;
+
+var WORLD_WIDTH = 5000;
+var WORLD_HEIGHT = 1000;
+
 Global.game = new Phaser.Game( SCREEN_WIDTH, SCREEN_HEIGHT, Phaser.CANVAS );
 
 Global.game.state.add( 'Boot', Global.Boot );
