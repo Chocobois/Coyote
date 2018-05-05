@@ -32,7 +32,8 @@ Player.prototype.update = function ()
 	if ( up )		p.y -= 1;
 	if ( down )		p.y += 1;
 
-	//this.body.applyLinearImpulse(0, 500000, this.body.getWorldCenter().x, this.body.getWorldCenter().y, true);
+	const speed = 10000;
+	this.body.applyForce(new Vec2(p.x*speed, p.y*speed), this.body.getPosition());
 };
 
 Player.prototype.render = function (graphics)

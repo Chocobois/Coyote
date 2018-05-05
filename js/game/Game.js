@@ -42,6 +42,8 @@ Global.Game.prototype.preRender = function ()
 
 Global.Game.prototype.update = function ()
 {
+	this.player.update();
+
 	this.planckWorld.step(1/60);
 };
 
