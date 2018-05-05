@@ -9,8 +9,9 @@ Player.prototype.create = function ( group, x, y )
 	this.body.createFixture(planck.Circle(CIRCLE_RADIUS), { density: 1.0, friction: 0.9 });
 	console.log(this.body);
 
-	this.coyoteSprite = Global.game.add.sprite(0, 0, "coyote");
-	this.coyoteSprite.scale.set(0.1, 0.1);
+	this.sprite = Global.game.add.sprite(0, 0, "coyote");
+	this.sprite.anchor.set(0.5, 0.5);
+	this.sprite.scale.set(0.05, 0.05);
 
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
@@ -32,14 +33,15 @@ Player.prototype.update = function ()
 	if ( up )		p.y -= 1;
 	if ( down )		p.y += 1;
 
-	const speed = 10000;
+	const speed = 20000;
 	this.body.applyForce(new Vec2(p.x*speed, p.y*speed), this.body.getPosition());
 };
 
 Player.prototype.render = function (graphics)
 {
 	var p = this.body.getPosition();
+	graphics.lineStyle(0, 0, 1.0);
 	graphics.drawCircle(p.x, p.y, CIRCLE_RADIUS * 2);
-	this.coyoteSprite.centerX = p.x;
-	this.coyoteSprite.centerY = p.y;
+	this.sprite.centerX = p.x;
+	this.sprite.centerY = p.y;
 };

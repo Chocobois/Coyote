@@ -19,6 +19,7 @@ Global.Game.prototype.create = function ()
 	// NOTE: The physics engine might fuck up if we scale it
 	// So scale the renderer instead
 	this.game.world.scale.set(GRAPHICS_SCALE, GRAPHICS_SCALE);
+	Global.game.world.setBounds( 0, 0, GAME_WIDTH*5, GAME_HEIGHT );
 
 	this.graphics = Global.game.add.graphics(0, 0);
 
@@ -33,6 +34,9 @@ Global.Game.prototype.create = function ()
 
 Global.Game.prototype.preRender = function ()
 {
+	// Make it smooth, baby
+	Global.game.camera.x = (this.player.sprite.x - GAME_WIDTH/2) * GRAPHICS_SCALE;
+	Global.game.camera.y = (this.player.sprite.y - GAME_HEIGHT/2) * GRAPHICS_SCALE;
 };
 
 Global.Game.prototype.update = function ()
