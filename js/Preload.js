@@ -15,8 +15,17 @@ Global.Preload.prototype = {
 
 
 		/* Sprites */
-
+		this.load.image( 'cool', 'assets/sprites/cool.png' );
+		this.load.image( 'coyotecrouch', 'assets/sprites/coyotecrouch.png' );
+		this.load.image( 'coyotekick1', 'assets/sprites/coyotekick1.png' );
+		this.load.image( 'coyotekick2', 'assets/sprites/coyotekick2.png' );
+		this.load.image( 'coyotekick3', 'assets/sprites/coyotekick3.png' );
 		this.load.image( 'coyote', 'assets/sprites/coyote.png' );
+		this.load.image( 'coyotetrick1', 'assets/sprites/coyotetrick1.png' );
+		this.load.image( 'desert', 'assets/sprites/desert.png' );
+		this.load.image( 'halfpipe', 'assets/sprites/halfpipe.png' );
+		this.load.image( 'saloon', 'assets/sprites/saloon.png' );
+		this.load.image( 'slick', 'assets/sprites/slick.png' );
 		//this.load.spritesheet( 'name', 'assets/sprites/sheet.png', 32, 32 );
 
 
