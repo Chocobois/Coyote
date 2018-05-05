@@ -5,9 +5,33 @@ function Player ()
 
 Player.prototype.create = function ( group, x, y )
 {
+	var wheelFD = {};
+	wheelFD.density = 1.0;
+	wheelFD.friction = 0.9;
+
+	// create body
 	this.body = Global.physics.createDynamicBody(planck.Vec2(x, y));
 	this.body.createFixture(planck.Circle(CIRCLE_RADIUS), { density: 1.0, friction: 0.9 });
 
+	// create wheels
+	this.wheelBack = Global.physics.createDynamicBody(planck.Vec2(x + -1.0, y + 0.35));
+	this.wheelBack.createFixture(planck.Circle(0.4), wheelFD);
+	this.wheelFront = Global.physics.createDynamicBody(planck.Vec2(x + 1.0, y + 0.4));
+	this.wheelFront.createFixture(planck.Circle(0.4), wheelFD);
+
+	// join wheels to body
+	// this.springBack = Global.physics.createJoint(planck.DistanceJoint({
+	// 	frequencyHz : 0.0,
+	// 	dampingRatio : 0.0
+	// }, this.body, this.wheelBack, this.wheelBack.getPosition(), Vec2(0.0, 1.0)));
+
+	// var springFront = Global.physics.createJoint(planck.DistanceJoint({
+	// 	frequencyHz : 0.0,
+	// 	dampingRatio : 0.0
+	// }, this.body, this.wheelFront, this.wheelFront.getPosition(), Vec2(0.0, 1.0)));
+
+
+	// join sprite to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite.scale.set(0.05, 0.05);
@@ -56,4 +80,10 @@ Player.prototype.render = function (graphics)
 	graphics.drawCircle(p.x, p.y, CIRCLE_RADIUS * 2);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
+
+	var wb = this.wheelBack.getPosition();
+	var wf = this.wheelFront.getPosition();
+	graphics.drawCircle(wb.x, wb.y, 15);
+	graphics.drawCircle(wf.x, wf.y, 15);
+
 };
