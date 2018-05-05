@@ -6,10 +6,7 @@ function Terrain ()
 Terrain.prototype.create = function ( x, y )
 {
 	this.ground = Global.physics.createBody();
-	this.groundFixtureDefinition = {
-		density: 0.0,
-		friction: 0.6
-	}
+	this.groundFixtureDefinition = {density: 0.0, friction: 0.6}
 
 	this.groundPoints = [
 		Vec2(10, GAME_HEIGHT-10),
