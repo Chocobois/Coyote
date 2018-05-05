@@ -5,6 +5,9 @@ Global.Game = function()
 {
 	this.step = 0;
 	this.planckWorld = planck.World({ gravity: planck.Vec2(0, 10) });
+	Global.physics = this.planckWorld;
+
+	this.player = new Player();
 };
 
 var CIRCLE_RADIUS = 10;
@@ -17,11 +20,10 @@ Global.Game.prototype.create = function ()
 	this.game.world.scale.set(GRAPHICS_SCALE, GRAPHICS_SCALE);
 
 	this.graphics = Global.game.add.graphics(0, 0);
-	this.circleBody = this.planckWorld.createDynamicBody(planck.Vec2(5, 5));
-	this.circleBody.createFixture(planck.Circle(CIRCLE_RADIUS), { density: 1.0, friction: 0.9 });
-	
-	this.coyoteSprite = this.add.sprite(0, 0, "coyote");
-	this.coyoteSprite.scale.set(0.1, 0.1);
+
+	// Create player object
+	this.playerGroup = Global.game.add.physicsGroup();
+	this.player.create(this.playerGroup, 20, 20);
 	
 	var ground = this.planckWorld.createBody();
 	var groundFixtureDefinition = {
@@ -53,14 +55,11 @@ Global.Game.prototype.render = function ()
 	}*/
 	this.graphics.clear();
 	this.graphics.beginFill(0xFF0000, 1);
-	var circlePos = this.circleBody.getPosition();
-	this.graphics.drawCircle(circlePos.x, circlePos.y, CIRCLE_RADIUS * 2);
-	
+
+	this.player.render(this.graphics);
+
 	// Draw ground
 	this.graphics.lineStyle(1, 0x000000, 1.0);
 	this.graphics.moveTo(0, GAME_HEIGHT);
 	this.graphics.lineTo(GAME_WIDTH, GAME_HEIGHT);
-	
-	this.coyoteSprite.centerX = circlePos.x;
-	this.coyoteSprite.centerY = circlePos.y;
 };
