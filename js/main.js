@@ -22,3 +22,6 @@ var GREEN = 'rgba(0,255,0,0.4)';
 var CYAN = 'rgba(0,255,255,0.4)';
 var BLUE = 'rgba(0,0,255,0.4)';
 var PURPLE = 'rgba(255,0,255,0.4)';
+
+var pl = planck;
+var Vec2 = pl.Vec2;
