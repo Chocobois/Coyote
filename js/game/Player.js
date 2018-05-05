@@ -7,7 +7,6 @@ Player.prototype.create = function ( group, x, y )
 {
 	this.body = Global.physics.createDynamicBody(planck.Vec2(x, y));
 	this.body.createFixture(planck.Circle(CIRCLE_RADIUS), { density: 1.0, friction: 0.9 });
-	console.log(this.body);
 
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
@@ -28,15 +27,26 @@ Player.prototype.update = function ()
 	var right = this.keys.right.isDown || this.keys.d.isDown;
 	var down = this.keys.down.isDown || this.keys.s.isDown;
 	var up = this.keys.up.isDown || this.keys.w.isDown;
+
 	if ( left )		p.x -= 1;
 	if ( right )	p.x += 1;
 	if ( up )		p.y -= 1;
 	if ( down )		p.y += 1;
 
+	// rotate sprite according to speed
 	this.sprite.angle = this.body.getAngularVelocity();
 
-	const speed = 20000;
-	this.body.applyForce(new Vec2(p.x*speed, p.y*speed), this.body.getPosition());
+	// move left or right
+	if (left || right) {
+		const horizontal_speed = 20000;
+		this.body.applyForce(new Vec2(p.x*horizontal_speed, p.y), this.body.getPosition());
+	}
+
+	// jump
+	if (up) {
+        const jump_speed = -200000;
+        this.body.applyForce(new Vec2(0, jump_speed), this.body.getPosition());
+    }
 };
 
 Player.prototype.render = function (graphics)
