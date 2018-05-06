@@ -8,20 +8,21 @@ Terrain.prototype.create = function ( x, y )
 	this.ground = Global.physics.createBody();
 	this.groundFixtureDefinition = {density: 0.0, friction: 0.6}
 
+	var y = 100;
 	this.groundPoints = [
-		Vec2(10, GAME_HEIGHT-10),
-		Vec2(GAME_WIDTH/2, GAME_HEIGHT),
-		Vec2(GAME_WIDTH-10, GAME_HEIGHT-10),
-		Vec2(GAME_WIDTH-10 + 40*1, GAME_HEIGHT-10 + 4*0.25),
-		Vec2(GAME_WIDTH-10 + 40*2, GAME_HEIGHT-10 + 4*1.0),
-		Vec2(GAME_WIDTH-10 + 40*3, GAME_HEIGHT-10 + 4*4.0),
-		Vec2(GAME_WIDTH-10 + 40*4, GAME_HEIGHT-10 + 4*0.0),
-		Vec2(GAME_WIDTH-10 + 40*5, GAME_HEIGHT-10 + 4*0.0),
-		Vec2(GAME_WIDTH-10 + 40*6, GAME_HEIGHT-10 + 4*-1.0),
-		Vec2(GAME_WIDTH-10 + 40*7, GAME_HEIGHT-10 + 4*-2.0),
-		Vec2(GAME_WIDTH-10 + 40*8, GAME_HEIGHT-10 + 4*-2.0),
-		Vec2(GAME_WIDTH-10 + 40*9, GAME_HEIGHT-10 + 4*-1.25),
-		Vec2(GAME_WIDTH-10 + 40*10, GAME_HEIGHT-10 + 4*0.0),
+		Vec2(10, y),
+		Vec2(GAME_WIDTH/2, y+10),
+		Vec2(GAME_WIDTH-10, y),
+		Vec2(GAME_WIDTH-10 + 40*1, y + 4*0.25),
+		Vec2(GAME_WIDTH-10 + 40*2, y + 4*1.0),
+		Vec2(GAME_WIDTH-10 + 40*3, y + 4*4.0),
+		Vec2(GAME_WIDTH-10 + 40*4, y + 4*0.0),
+		Vec2(GAME_WIDTH-10 + 40*5, y + 4*0.0),
+		Vec2(GAME_WIDTH-10 + 40*6, y + 4*-1.0),
+		Vec2(GAME_WIDTH-10 + 40*7, y + 4*-2.0),
+		Vec2(GAME_WIDTH-10 + 40*8, y + 4*-2.0),
+		Vec2(GAME_WIDTH-10 + 40*9, y + 4*-1.25),
+		Vec2(GAME_WIDTH-10 + 40*10, y + 4*0.0),
 	];
 
 	// Add ground points to physics
