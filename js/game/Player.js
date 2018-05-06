@@ -67,10 +67,7 @@ Player.prototype.create = function ( group, x, y )
 	this.wheelBack.setPosition(xy_vector);
 	this.wheelFront.setPosition(xy_vector);
 
-	// add wheel sensors
-	this.sensor = {touchingF : false, touchingB : false};
-	this.add_sensors();
-
+	this.setupSensors();
 	this.setupSprite();
 	this.setupAnimation();
 	this.setupInputs();
@@ -137,52 +134,37 @@ Player.prototype.setupAnimation = function () {
 	this.setAnimation('idle');
 };
 
-// Add sensor below player to detect ground. Activates this.sensor.touching
-Player.prototype.add_sensors = function() {
+Player.prototype.setupSensors = function() {
+	this.sensor = {touchingF : false, touchingB : false};
+	// Add sensor below player to detect ground. Activates this.sensor.touching
 	fd = {};
 	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheel_radius*2);
 	fd.isSensor = true;
-	var m_sensorF = this.wheelFront.createFixture(fd);
-	var m_sensorB = this.wheelBack.createFixture(fd);
+	let m_sensorF = this.wheelFront.createFixture(fd);
+	let m_sensorB = this.wheelBack.createFixture(fd);
 	m_sensorF.m_userData = this.sensor;
 	m_sensorB.m_userData = this.sensor;
 
 	// Implement contact listener.
 	Global.physics.on('begin-contact', function(contact) {
-		var fixtureA = contact.getFixtureA();
-		var fixtureB = contact.getFixtureB();
-
-		if (fixtureA == m_sensorF) {
+		let fixtureA = contact.getFixtureA();
+		let fixtureB = contact.getFixtureB();
+		if (fixtureA == m_sensorF || fixtureB == m_sensorF) {
 			m_sensorF.m_userData.touchingF += 1;
 		}
-		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB += 1;
-		}
-
-		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF += 1;
-		}
-		if (fixtureB == m_sensorB) {
+		if (fixtureA == m_sensorB || fixtureB == m_sensorB) {
 			m_sensorB.m_userData.touchingB += 1;
 		}
 	});
 
 	// Implement contact listener.
 	Global.physics.on('end-contact', function(contact) {
-		var fixtureA = contact.getFixtureA();
-		var fixtureB = contact.getFixtureB();
-
-		if (fixtureA == m_sensorF) {
+		let fixtureA = contact.getFixtureA();
+		let fixtureB = contact.getFixtureB();
+		if (fixtureA == m_sensorF || fixtureB == m_sensorF) {
 			m_sensorF.m_userData.touchingF -= 1;
 		}
-		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB -= 1;
-		}
-
-		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF -= 1;
-		}
-		if (fixtureB == m_sensorB) {
+		if (fixtureA == m_sensorB || fixtureB == m_sensorB) {
 			m_sensorB.m_userData.touchingB -= 1;
 		}
 	});
