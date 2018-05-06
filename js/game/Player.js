@@ -209,7 +209,7 @@ Player.prototype.update = function () {
 		}
 
 		// Animate
-		this.setAnimation('idle');
+		this.setAnimation(left || right ? 'kick' : 'idle');
 
 		// Unset blinking animation
 		this.sprite.scale.y = this.sprite_scale;
@@ -259,8 +259,6 @@ Player.prototype.update = function () {
 };
 
 Player.prototype.move = function (active, direction) {
-	this.setAnimation(active ? 'kick' : 'idle');
-
 	// set sprite direction
 	if (direction < 0)
 		this.sprite_left();
