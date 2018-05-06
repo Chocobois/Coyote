@@ -1,5 +1,5 @@
 function Player () {
-	this.debug = false; // enable me during development to see what's going on.
+	this.debug = true; // enable me during development to see what's going on.
 
 	// FDs
 	this.bodyFD = {};
@@ -84,6 +84,17 @@ Player.prototype.setupSprite = function () {
 	// add coyote sprite
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
+    
+    // add wheel sprite
+    this.wheelScale = 0.07;
+    
+    this.wheelBackSprite = Global.game.add.sprite(0, 0, "wheel");
+    this.wheelBackSprite.scale.set(this.wheelScale, this.wheelScale);
+    this.wheelBackSprite.anchor.set(0.5, 0.5);
+    
+    this.wheelFrontSprite = Global.game.add.sprite(0, 0, "wheel");
+    this.wheelFrontSprite.scale.set(this.wheelScale, this.wheelScale);
+    this.wheelFrontSprite.anchor.set(0.5, 0.5);
 
 	// helper functions
 	this.sprite_left = function(){
@@ -304,6 +315,8 @@ Player.prototype.render = function (graphics) {
     var colorOffGround = 0x8F4E21;
     var colorOnGround = 0xB8672F;
     var lineColor = 0x8B461D;
+    var wheelBack_pos = this.wheelBack.getPosition();
+    var wheelFront_pos = this.wheelFront.getPosition();
 
 	if (this.debug) {
 
@@ -323,6 +336,11 @@ Player.prototype.render = function (graphics) {
         let body_pos = this.body.getPosition();
         graphics.beginFill(red, 1);
         graphics.drawCircle(body_pos.x, body_pos.y, this.body_radius * 2);
+        
+        graphics.beginFill(this.sensor.touchingB ? colorOnGround : colorOffGround, 0.5);
+        graphics.drawCircle(wheelBack_pos.x, wheelBack_pos.y, this.wheel_radius * 2);
+        graphics.beginFill(this.sensor.touchingF ? colorOnGround : colorOffGround, 0.5);
+        graphics.drawCircle(wheelFront_pos.x, wheelFront_pos.y, this.wheel_radius * 2);
 
         // draw wheel joints
         graphics.lineStyle(1, red, 1.0);
@@ -332,15 +350,20 @@ Player.prototype.render = function (graphics) {
         graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
         graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
     }
-    graphics.lineStyle(0.2, lineColor, 1.0);
-    
     // draw wheels
-    let wheelBack_pos = this.wheelBack.getPosition();
-    graphics.beginFill(this.sensor.touchingB ? colorOnGround : colorOffGround, 0.5);
-    graphics.drawCircle(wheelBack_pos.x, wheelBack_pos.y, this.wheel_radius * 2);
-    let wheelFront_pos = this.wheelFront.getPosition();
-    graphics.beginFill(this.sensor.touchingF ? colorOnGround : colorOffGround, 0.5);
-    graphics.drawCircle(wheelFront_pos.x, wheelFront_pos.y, this.wheel_radius * 2);
+
+    this.wheelBackSprite.x = wheelBack_pos.x;
+    this.wheelBackSprite.y = wheelBack_pos.y;
+    
+    this.wheelFrontSprite.x = wheelFront_pos.x;
+    this.wheelFrontSprite.y = wheelFront_pos.y;
+    
+    // rotate the wheels
+    this.wheelBackSprite.angle += this.springBack.getJointSpeed();
+    this.wheelFrontSprite.angle += this.springFront.getJointSpeed();
+    
+    
+    
 };
 
 // utils

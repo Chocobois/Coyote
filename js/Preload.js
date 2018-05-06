@@ -23,6 +23,7 @@ Global.Preload.prototype = {
 		this.load.image( 'coyotekick2', 'assets/sprites/coyotekick2.png' );
 		this.load.image( 'coyotekick3', 'assets/sprites/coyotekick3.png' );
 		this.load.image( 'coyotetrick1', 'assets/sprites/coyotetrick1.png' );
+		this.load.image( 'wheel', 'assets/sprites/backwheel.png' );
 
 		// Background
 		this.load.image( 'sky', 'assets/sprites/sky.png' );
