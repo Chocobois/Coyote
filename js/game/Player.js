@@ -294,10 +294,10 @@ Player.prototype.update = function () {
 	}
 
 	// lean
-	if (this.keys.q.isDown) {
+	if (left || this.keys.q.isDown) {
 		this.body.applyAngularImpulse(-this.lean_torque)
 	}
-	if (this.keys.e.isDown) {
+	if (right || this.keys.e.isDown) {
 		this.body.applyAngularImpulse(this.lean_torque)
 	}
 
