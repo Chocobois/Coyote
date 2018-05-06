@@ -33,6 +33,10 @@ Player.prototype.create = function ( group, x, y )
 	wheelFD.density = 10.0;
 	wheelFD.friction = 0.9;
 
+	this.jump_speed_max = 40000;
+	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
+	this.jump_start_time = undefined;
+
 	var joint = {};
 	joint.motorSpeed = 0.0;
 	joint.maxMotorTorque = 15000.0;
@@ -193,10 +197,19 @@ Player.prototype.update = function ()
 	else
 		this.move(false, 0);
 
-	// Jump
-	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
-		const jump_speed = -20000;
-		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
+	// Jump hold
+	if (this.keys.space.justDown) {
+		// store time pressed down
+		this.jump_start_time = Date.now();
+	}
+	// Jump release
+	if (this.keys.space.justUp) {
+		if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
+			let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
+			let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
+			this.body.applyLinearImpulse(new Vec2(0, -jump_speed), this.body.getPosition());
+		}
+		this.jump_start_time = undefined;
 	}
 
 	// Lean
