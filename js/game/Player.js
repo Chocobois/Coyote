@@ -6,6 +6,7 @@ function Player ()
 	this.step = 0;
 	this.jumpCharge = 0;
 	this.motor_speed = 100.0;
+	this.debug = true;
 }
 
 Player.prototype.create = function ( group, x, y )
@@ -35,8 +36,8 @@ Player.prototype.create = function ( group, x, y )
 	var wheelBack_offset = planck.Vec2(-7, 0);
 	var wheelFront_offset = planck.Vec2(7, 0);
 
-	this.bodyRadius = 6;
-	this.wheelRadius = 1.4;
+	this.body_radius = 6;
+	this.wheel_radius = 1.4;
 	// this.bodyVertices = [
 	// 	Vec2(-10, 1),
 	// 	Vec2(-10, -1),
@@ -46,14 +47,14 @@ Player.prototype.create = function ( group, x, y )
 
 	// create body
 	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
-	this.body.createFixture(planck.Circle(this.bodyRadius), bodyFD);
+	this.body.createFixture(planck.Circle(this.body_radius), bodyFD);
 	// this.body.createFixture(planck.Polygon(this.bodyVertices), bodyFD);
 
 	// create wheels
 	this.wheelBack = Global.physics.createDynamicBody(wheelBack_offset);
-	this.wheelBack.createFixture(planck.Circle(this.wheelRadius), wheelFD);
+	this.wheelBack.createFixture(planck.Circle(this.wheel_radius), wheelFD);
 	this.wheelFront = Global.physics.createDynamicBody(wheelFront_offset);
-	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
+	this.wheelFront.createFixture(planck.Circle(this.wheel_radius), wheelFD);
 
 	// join wheels to body with wheel joints
 	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
@@ -122,7 +123,7 @@ Player.prototype.setAnimation = function ( newState )
 Player.prototype.add_sensors = function()
 {
 	fd = {};
-	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius*2);
+	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheel_radius*2);
 	fd.isSensor = true;
 	var m_sensorF = this.wheelFront.createFixture(fd);
 	var m_sensorB = this.wheelBack.createFixture(fd);
@@ -289,33 +290,39 @@ Player.prototype.move = function (active, direction) {
 };
 
 
-Player.prototype.render = function (graphics)
-{
-	// draw body and sprite
-	var p = this.body.getPosition();
-	var angle = this.body.getAngle();
-	graphics.beginFill(0xFF0000, 1);
-	graphics.lineStyle(0.2, 0, 1.0);
-	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
-	// graphics.drawPolygon(offset_verts(p, rotate_verts(this.bodyVertices, angle)));
-	// sprite_vert = offset_verts(p, rotate_verts([planck.Vec2(0, -6)], angle))[0];
-	// this.sprite.centerX = sprite_vert.x;
-	// this.sprite.centerY = sprite_vert.y;
+Player.prototype.render = function (graphics) {
+	// draw some shapes to let us see the physics behind the scenes.
+	// in normal, non-debug gameplay, these should not be drawn!
 
-	// draw wheels
-	var wb = this.wheelBack.getPosition();
-	var wf = this.wheelFront.getPosition();
-	graphics.beginFill(this.sensor.touchingB ? 0x00FF00 : 0x0000FF, 0.5);
-	graphics.drawCircle(wb.x, wb.y, this.wheelRadius * 2);
-	graphics.beginFill(this.sensor.touchingF ? 0x00FF00 : 0x0000FF, 0.5);
-	graphics.drawCircle(wf.x, wf.y, this.wheelRadius * 2);
+	if (this.debug) {
+		graphics.lineStyle(0.2, 0, 1.0);
 
-	graphics.lineStyle(1, 0xFF0000, 1.0);
-	graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
-	graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
-	graphics.lineStyle(1, 0xFF0000, 1.0);
-	graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
-	graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
+        // colors
+        let red = 0xFF0000;
+        let green = 0x00FF00;
+        let blue = 0x0000FF;
+
+        // draw body
+        let body_pos = this.body.getPosition();
+        graphics.beginFill(red, 1);
+        graphics.drawCircle(body_pos.x, body_pos.y, this.body_radius * 2);
+
+        // draw wheels
+        let wheelBack_pos = this.wheelBack.getPosition();
+        graphics.beginFill(this.sensor.touchingB ? green : blue, 0.5);
+        graphics.drawCircle(wheelBack_pos.x, wheelBack_pos.y, this.wheel_radius * 2);
+        let wheelFront_pos = this.wheelFront.getPosition();
+        graphics.beginFill(this.sensor.touchingF ? green : blue, 0.5);
+        graphics.drawCircle(wheelFront_pos.x, wheelFront_pos.y, this.wheel_radius * 2);
+
+        // draw wheel joints
+        graphics.lineStyle(1, red, 1.0);
+        graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
+        graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
+        graphics.lineStyle(1, red, 1.0);
+        graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
+        graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
+    }
 };
 
 // utils
