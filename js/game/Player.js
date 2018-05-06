@@ -36,6 +36,7 @@ Player.prototype.create = function ( group, x, y )
 	this.jump_speed_max = 40000;
 	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
 	this.jump_start_time = undefined;
+	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
 
 	var joint = {};
 	joint.motorSpeed = 0.0;
@@ -176,7 +177,7 @@ Player.prototype.update = function ()
 	if ( down )		p.y += 1;
 
 	// rotate sprite according to speed
-	this.sprite.angle = (this.body.getAngle() * 180 )/3.1415 -180;
+	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
 
 	// flip sprite if player turns around
 	var turn_threshold = 20.0;
@@ -207,7 +208,12 @@ Player.prototype.update = function ()
 		if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
 			let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 			let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
-			this.body.applyLinearImpulse(new Vec2(0, -jump_speed), this.body.getPosition());
+			let jump_vector = planck.Vec2(0, -jump_speed);  //straight up vector
+			if (this.jump_normal) {
+				// rotate in the direction of normal
+				jump_vector = rotate_verts([planck.Vec2(0, -jump_speed)], this.body.getAngle() - Math.PI)[0];
+			}
+			this.body.applyLinearImpulse(jump_vector, this.body.getPosition());
 		}
 		this.jump_start_time = undefined;
 	}
