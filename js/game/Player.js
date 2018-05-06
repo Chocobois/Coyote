@@ -1,112 +1,117 @@
-function offset_verts(offset, verts) {
-	var new_verts = [];
-	verts.forEach(function(item){
-		new_verts.push(item.clone().add(offset));
-	});
-	return new_verts;
-}
+function Player () {
+	this.debug = true; // enable me during development to see what's going on.
 
-function rotate_verts(verts, angle) {
-	var around = Vec2(0, 0);  // rotate around this point
-	var new_verts = [];
-	verts.forEach(function(item) {
-		new_verts.push(planck.Vec2(
-			(Math.cos(angle) * item.x - Math.sin(angle) * item.y),
-			(Math.sin(angle) * item.x + Math.cos(angle) * item.y)
-		));
-    });
-	return new_verts;
-}
+	// FDs
+	this.bodyFD = {};
+	this.bodyFD.density = 1.0;
+	this.bodyFD.friction = 0.1;
 
-function Player ()
-{
-	self.SPRITE_SCALE = 0.05;
+	this.wheelFD = {};
+	this.wheelFD.density = 10.0;
+	this.wheelFD.friction = 0.9;
 
-	this.step = 0;
-	this.jumpCharge = 0;
-}
+	// joints
+	this.wheelJoint = {};
+	this.wheelJoint.motorSpeed = 0.0;
+	this.wheelJoint.maxMotorTorque = 15000.0;
+	this.wheelJoint.enableMotor = true;
+	this.wheelJoint.frequencyHz = 4;
+	this.wheelJoint.dampingRatio = 0.7;
 
-Player.prototype.create = function ( group, x, y )
-{
-	// tunables
-	var bodyFD = {};
-	bodyFD.density = 1.0;
-	bodyFD.friction = 0.1;
-
-	var wheelFD = {};
-	wheelFD.density = 10.0;
-	wheelFD.friction = 0.9;
-
+	// jump charging
 	this.jump_speed_max = 10000;
 	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
 	this.jump_start_time = undefined;
 	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
 
-	var joint = {};
-	joint.motorSpeed = 0.0;
-	joint.maxMotorTorque = 15000.0;
-	joint.enableMotor = true;
-	joint.frequencyHz = 4;
-	joint.dampingRatio = 0.7;
+	// animation
+	this.sprite_scale = 0.05;
+	this.sprite_starts_facing_right = true;
+	this.sprite_turn_threshold = 7.5;
+	this.step = 0;
+	this.steps_per_frame = 10;
 
-	var xy_vector = planck.Vec2(x, y);
-	var wheelBack_offset = planck.Vec2(-7, 0);
-	var wheelFront_offset = planck.Vec2(7, 0);
+	// geometry
+	this.body_position = planck.Vec2(0.0, 8);
+	this.body_radius = 6;
 
-	this.bodyRadius = 6;
-	this.wheelRadius = 1.4;
-	// this.bodyVertices = [
-	// 	Vec2(-10, 1),
-	// 	Vec2(-10, -1),
-	// 	Vec2(10, -1),
-	// 	Vec2(10, 1),
-	// ];
+	this.wheelBack_position = planck.Vec2(-7, 0);
+	this.wheelFront_position = planck.Vec2(7, 0);
+	this.wheel_radius = 1.4;
 
-	// create body
-	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
-	this.body.createFixture(planck.Circle(this.bodyRadius), bodyFD);
-	// this.body.createFixture(planck.Polygon(this.bodyVertices), bodyFD);
+	// vehicle
+	this.motor_speed = 100.0;
+	this.lean_torque = 1000.0;
+}
 
-	// create wheels
-	this.wheelBack = Global.physics.createDynamicBody(wheelBack_offset);
-	this.wheelBack.createFixture(planck.Circle(this.wheelRadius), wheelFD);
-	this.wheelFront = Global.physics.createDynamicBody(wheelFront_offset);
-	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
+Player.prototype.create = function ( group, x, y ) {
+	this.setupGeometry();
+	this.placeGeometry(x, y);
+	this.setupSensors();
+	this.setupSprite();
+	this.setupAnimation();
+	this.setupInputs();
+};
 
-	// join wheels to body with wheel joints
-	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
-	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
+Player.prototype.setupGeometry = function () {
+    // create body
+    this.body = Global.physics.createDynamicBody(this.body_position);
+    this.body.createFixture(planck.Circle(this.body_radius), this.bodyFD);
 
-	// move body into specified x, y position
-	this.body.setPosition(xy_vector);
-	this.body.setAngle(Math.PI);
-	this.wheelBack.setPosition(xy_vector);
-	this.wheelFront.setPosition(xy_vector);
+    // create wheels
+    this.wheelBack = Global.physics.createDynamicBody(this.wheelBack_position);
+    this.wheelBack.createFixture(planck.Circle(this.wheel_radius), this.wheelFD);
+    this.wheelFront = Global.physics.createDynamicBody(this.wheelFront_position);
+    this.wheelFront.createFixture(planck.Circle(this.wheel_radius), this.wheelFD);
 
-	// add wheel sensors
-	this.sensor = {touchingF : false, touchingB : false};
-	this.add_sensors();
+    // join wheels to body with wheel joints
+    this.springBack = Global.physics.createJoint(planck.WheelJoint(
+        this.wheelJoint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
+    this.springFront = Global.physics.createJoint(planck.WheelJoint(
+        this.wheelJoint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
+};
 
-	// add sprite, to be joined to body. also add some helper funcs.
+Player.prototype.placeGeometry = function (x, y) {
+    // move body to specified x, y position
+    let xy = planck.Vec2(x, y);
+    this.body.setPosition(xy);
+    this.body.setAngle(Math.PI);
+    this.wheelBack.setPosition(xy);
+    this.wheelFront.setPosition(xy);
+};
+
+Player.prototype.setupSprite = function () {
+	// add coyote sprite
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
+
+	// helper functions
 	this.sprite_left = function(){
-		this.sprite.scale.set(-self.SPRITE_SCALE, self.SPRITE_SCALE);
+		// turn the sprite to the left
+		this.sprite.scale.set(-this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_right = function(){
-		this.sprite.scale.set(self.SPRITE_SCALE, self.SPRITE_SCALE);
+		// turn the sprite to the right
+		this.sprite.scale.set(this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_is_left = function(){
+		// is the sprite already facing left?
 		return this.sprite.scale.x < 0
 	};
 	this.sprite_is_right = function(){
+		// is the sprite already facing right?
 		return this.sprite.scale.x > 0
 	};
-	this.sprite_right();
 
-	this.setupAnimation();
+	// set initial facing
+	if (this.sprite_starts_facing_right) {
+        this.sprite_right();
+    } else {
+		this.sprite_left();
+	}
+};
 
-	// set up inputs
+Player.prototype.setupInputs = function() {
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
 	this.keys.a = Global.game.input.keyboard.addKey( Phaser.Keyboard.A );
@@ -117,107 +122,83 @@ Player.prototype.create = function ( group, x, y )
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
 };
 
-Player.prototype.setupAnimation = function ()
-{
+Player.prototype.setupAnimation = function () {
+	// possible animations
 	this.animations = {};
 	this.animations['idle'] = [0];
 	this.animations['crouch'] = [1];
 	this.animations['kick'] = [2,3,4,0];
 
-	this.setAnimation( 'idle' );
+	// helper functions
+	this.setAnimation = function (newState) {
+		if (this.state !== newState) {
+			this.state = newState;
+			this.sprite.frame = this.animations[newState][0];
+		}
+	};
+
+	// set initial animation
+	this.setAnimation('idle');
 };
 
-Player.prototype.setAnimation = function ( newState )
-{
-	if ( this.state != newState )
-	{
-		this.state = newState;
-		this.sprite.frame = this.animations[newState][0];
-	}
-};
-
-// Add sensor below player to detect ground. Activates this.sensor.touching
-Player.prototype.add_sensors = function()
-{
+Player.prototype.setupSensors = function() {
+	this.sensor = {touchingF : false, touchingB : false};
+	// Add sensor below player to detect ground. Activates this.sensor.touching
 	fd = {};
-	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius*2);
+	fd.shape = planck.Circle(planck.Vec2(0.0, 0.0), this.wheel_radius*2);
 	fd.isSensor = true;
-	var m_sensorF = this.wheelFront.createFixture(fd);
-	var m_sensorB = this.wheelBack.createFixture(fd);
+	let m_sensorF = this.wheelFront.createFixture(fd);
+	let m_sensorB = this.wheelBack.createFixture(fd);
 	m_sensorF.m_userData = this.sensor;
 	m_sensorB.m_userData = this.sensor;
 
 	// Implement contact listener.
 	Global.physics.on('begin-contact', function(contact) {
-		var fixtureA = contact.getFixtureA();
-		var fixtureB = contact.getFixtureB();
-
-		if (fixtureA == m_sensorF) {
+		let fixtureA = contact.getFixtureA();
+		let fixtureB = contact.getFixtureB();
+		if (fixtureA == m_sensorF || fixtureB == m_sensorF) {
 			m_sensorF.m_userData.touchingF += 1;
 		}
-		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB += 1;
-		}
-
-		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF += 1;
-		}
-		if (fixtureB == m_sensorB) {
+		if (fixtureA == m_sensorB || fixtureB == m_sensorB) {
 			m_sensorB.m_userData.touchingB += 1;
 		}
 	});
 
 	// Implement contact listener.
 	Global.physics.on('end-contact', function(contact) {
-		var fixtureA = contact.getFixtureA();
-		var fixtureB = contact.getFixtureB();
-
-		if (fixtureA == m_sensorF) {
+		let fixtureA = contact.getFixtureA();
+		let fixtureB = contact.getFixtureB();
+		if (fixtureA == m_sensorF || fixtureB == m_sensorF) {
 			m_sensorF.m_userData.touchingF -= 1;
 		}
-		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB -= 1;
-		}
-
-		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF -= 1;
-		}
-		if (fixtureB == m_sensorB) {
+		if (fixtureA == m_sensorB || fixtureB == m_sensorB) {
 			m_sensorB.m_userData.touchingB -= 1;
 		}
 	});
 };
 
-Player.prototype.update = function ()
-{
-	var p = new Phaser.Point( 0, 0 );
-	var left = this.keys.left.isDown || this.keys.a.isDown;
-	var right = this.keys.right.isDown || this.keys.d.isDown;
-	var down = this.keys.down.isDown || this.keys.s.isDown;
-	var up = this.keys.up.isDown || this.keys.w.isDown;
+Player.prototype.update = function () {
+	let p = new Phaser.Point( 0, 0 );
+	let left = this.keys.left.isDown || this.keys.a.isDown;
+	let right = this.keys.right.isDown || this.keys.d.isDown;
+	let down = this.keys.down.isDown || this.keys.s.isDown;
+	let up = this.keys.up.isDown || this.keys.w.isDown;
 
 	if ( left )		p.x -= 1;
 	if ( right )	p.x += 1;
 	if ( up )		p.y -= 1;
 	if ( down )		p.y += 1;
 
-	// rotate sprite according to speed
-	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
+	// rotate sprite according to body angle
+	this.sprite.angle = (this.body.getAngle() * 180) / Math.PI - 180;
 
-	// flip sprite if player turns around
-	var turn_threshold = 20.0;
-	var current_speed = this.springBack.getJointSpeed();
-	if (this.sprite_is_right() && current_speed < -turn_threshold) {
-		this.sprite_left();
-	} else if (this.sprite_is_left() && current_speed > turn_threshold) {
-		this.sprite_right();
-	}
+	// do this calculation early so we can use it twice
+	let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 
 	if (!this.keys.space.isDown) {
 		// Jump release
 		if (this.keys.space.justUp) {
 			if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
-				let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 				let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
 				let jump_vector = planck.Vec2(0, -jump_speed);  //straight up vector
 				if (this.jump_normal) {
@@ -231,9 +212,12 @@ Player.prototype.update = function ()
 			this.jump_start_time = undefined;
 		}
 
-		this.sprite.scale.y = self.SPRITE_SCALE;
+		// Animate
+		this.setAnimation(left || right ? 'kick' : 'idle');
+
+		// Unset blinking animation
+		this.sprite.scale.y = this.sprite_scale;
 		this.sprite.alpha = 1.0;
-		this.setAnimation('idle');
 
 		// Move
 		if (left && right)
@@ -246,46 +230,62 @@ Player.prototype.update = function ()
 			this.move(false, 0);
 	}
 	else {
+		// Jump start
 		if (this.keys.space.justDown) {
 			this.jump_start_time = Date.now();
 		}
 
-		this.move(false, 0);
+		// Animate
 		this.setAnimation('crouch');
 
 		// Blinking animation upon full charge
-		let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
 			this.sprite.alpha = 1.8 - this.sprite.alpha;
 		}
+
+		// Don't move
+		this.move(false, 0);
 	}
 
-	// Lean
-	let lean_torque = 1000;
+	// lean
 	if (this.keys.q.isDown) {
-		this.body.applyAngularImpulse(-lean_torque)
+		this.body.applyAngularImpulse(-this.lean_torque)
 	}
 	if (this.keys.e.isDown) {
-		this.body.applyAngularImpulse(lean_torque)
+		this.body.applyAngularImpulse(this.lean_torque)
 	}
 
+	// progress through animations
 	this.step += 1;
 	var a = this.animations[this.state];
 	var f = Math.round( this.step / 10 );
 	this.sprite.frame = a[f % a.length];
 };
 
-Player.prototype.move = function (active, direction)
-{
-	const motor_speed = 100.0;
-
-	this.setAnimation(active ? 'kick' : 'idle');
+Player.prototype.move = function (active, direction) {
+	// set sprite direction
 	if (direction < 0)
 		this.sprite_left();
 	else if (direction > 0)
 		this.sprite_right();
+	else {
+		// if player changes direction without input, wait for wheels to spin faster
+		// than this.sprite_turn_threshold, so things don't flip out around zero.
+		let current_speed = this.springBack.getJointSpeed();
+		if (this.sprite_is_right() && current_speed < -this.sprite_turn_threshold) {
+			this.sprite_left();
+		} else if (this.sprite_is_left() && current_speed > this.sprite_turn_threshold) {
+			this.sprite_right();
+		}
+	}
 
-	var motor = function (wheel, sensor) {
+	// set sprite position
+	let body_pos = this.body.getPosition();
+	this.sprite.centerX = body_pos.x;
+	this.sprite.centerY = body_pos.y;
+
+	// spin motors
+	let motor = function (wheel, sensor, motor_speed) {
 		if (sensor) {
 			wheel.enableMotor(active);
 			wheel.setMotorSpeed(direction * motor_speed);
@@ -295,37 +295,66 @@ Player.prototype.move = function (active, direction)
 		}
 	};
 
-	motor(this.springBack, this.sensor.touchingB);
-	motor(this.springFront, this.sensor.touchingF);
+	motor(this.springBack, this.sensor.touchingB, this.motor_speed);
+	motor(this.springFront, this.sensor.touchingF, this.motor_speed);
 };
 
-Player.prototype.render = function (graphics)
-{
-	// draw body and sprite
-	var p = this.body.getPosition();
-	var angle = this.body.getAngle();
-	// graphics.beginFill(0xFF0000, 1);
-	graphics.lineStyle(0.2, 0x8B461D, 1.0);
-	// graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
-	this.sprite.centerX = p.x;
-	this.sprite.centerY = p.y;
-	// graphics.drawPolygon(offset_verts(p, rotate_verts(this.bodyVertices, angle)));
-	// sprite_vert = offset_verts(p, rotate_verts([planck.Vec2(0, -6)], angle))[0];
-	// this.sprite.centerX = sprite_vert.x;
-	// this.sprite.centerY = sprite_vert.y;
+Player.prototype.render = function (graphics) {
+	// draw some shapes to let us see the physics behind the scenes.
+	// in normal, non-debug gameplay, these should not be drawn!
+    
+    var colorOffGround = 0x8F4E21;
+    var colorOnGround = 0xB8672F;
+    var lineColor = 0x8B461D;
 
-	// draw wheels
-	var wb = this.wheelBack.getPosition();
-	var wf = this.wheelFront.getPosition();
-	graphics.beginFill(this.sensor.touchingB ? 0x8F4E21 : 0xB8672F, 0.5);
-	graphics.drawCircle(wb.x, wb.y, this.wheelRadius * 2);
-	graphics.beginFill(this.sensor.touchingF ? 0x8F4E21 : 0xB8672F, 0.5);
-	graphics.drawCircle(wf.x, wf.y, this.wheelRadius * 2);
+	if (this.debug) {
 
-	// graphics.lineStyle(1, 0xFF0000, 1.0);
-	// graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
-	// graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
-	// graphics.lineStyle(1, 0xFF0000, 1.0);
-	// graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
-	// graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
+        // colors
+        let red = 0xFF0000;
+        let green = 0x00FF00;
+        let blue = 0x0000FF;
+        let black = 0x000000;
+        
+        colorOnGround = green;
+        colorOffGround = red;
+        lineColor = black;
+        
+        graphics.lineStyle(0.2, lineColor, 1.0);
+
+        // draw body
+        let body_pos = this.body.getPosition();
+        graphics.beginFill(red, 1);
+        graphics.drawCircle(body_pos.x, body_pos.y, this.body_radius * 2);
+
+        // draw wheel joints
+        graphics.lineStyle(1, red, 1.0);
+        graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
+        graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
+        graphics.lineStyle(1, red, 1.0);
+        graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
+        graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
+    }
+    graphics.lineStyle(0.2, lineColor, 1.0);
+    
+    // draw wheels
+    let wheelBack_pos = this.wheelBack.getPosition();
+    graphics.beginFill(this.sensor.touchingB ? colorOnGround : colorOffGround, 0.5);
+    graphics.drawCircle(wheelBack_pos.x, wheelBack_pos.y, this.wheel_radius * 2);
+    let wheelFront_pos = this.wheelFront.getPosition();
+    graphics.beginFill(this.sensor.touchingF ? colorOnGround : colorOffGround, 0.5);
+    graphics.drawCircle(wheelFront_pos.x, wheelFront_pos.y, this.wheel_radius * 2);
 };
+
+// utils
+function rotate_vert(vert, angle) {
+	return planck.Vec2(
+		(Math.cos(angle) * vert.x - Math.sin(angle) * vert.y),
+		(Math.sin(angle) * vert.x + Math.cos(angle) * vert.y)
+	)
+}
+
+function rotate_verts(verts, angle) {
+	return verts.map(function(item) {
+		return rotate_vert(item, angle);
+	});
+}
