@@ -1,18 +1,20 @@
-function add_vectors(a, b) {
-	return planck.Vec2(a.x + b.x, a.y + b.y);
-}
-
-function vector_angle(a, b) {
-	// angle in degrees
-	return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-}
-
-function add_vector_to_verticies(p, verts) {
-	// for v in verts: yield add_vectors(p, v)
+function offset_verts(offset, verts) {
 	var new_verts = [];
 	verts.forEach(function(item){
-		new_verts.push(add_vectors(p, item));
+		new_verts.push(item.clone().add(offset));
 	});
+	return new_verts;
+}
+
+function rotate_verts(verts, angle) {
+	var around = Vec2(0, 0);  // rotate around this point
+	var new_verts = [];
+	verts.forEach(function(item) {
+		new_verts.push(planck.Vec2(
+			(Math.cos(angle) * item.x - Math.sin(angle) * item.y),
+			(Math.sin(angle) * item.x + Math.cos(angle) * item.y)
+		));
+    });
 	return new_verts;
 }
 
@@ -43,10 +45,17 @@ Player.prototype.create = function ( group, x, y )
 
 	this.bodyRadius = 6;
 	this.wheelRadius = 1.4;
+	this.bodyVertices = [
+		Vec2(-10, 1),
+		Vec2(-10, -1),
+		Vec2(10, -1),
+		Vec2(10, 1),
+	];
 
 	// create body
 	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
 	this.body.createFixture(planck.Circle(this.bodyRadius), bodyFD);
+	// this.body.createFixture(planck.Polygon(this.bodyVertices), bodyFD);
 
 	// create wheels
 	this.wheelBack = Global.physics.createDynamicBody(wheelBack_offset);
@@ -70,7 +79,13 @@ Player.prototype.create = function ( group, x, y )
 	// add sprite, joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
-	this.sprite.scale.set(0.05, 0.05);
+	this.sprite_left = function(){
+		this.sprite.scale.set(-0.05, 0.05);
+	};
+	this.sprite_right = function(){
+		this.sprite.scale.set(0.05, 0.05);
+	};
+	this.sprite_right()
 
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
@@ -146,7 +161,8 @@ Player.prototype.update = function ()
 	if ( down )		p.y += 1;
 
 	// rotate sprite according to speed
-	this.sprite.angle = vector_angle(this.wheelFront.getPosition(), this.wheelBack.getPosition());
+	this.sprite.angle = (this.body.getAngle() * 180 )/3.1415 -180;
+	console.log(this.body.getAngle());
 
 	// move motors
 	var motor_speed = 100.0;
@@ -181,15 +197,20 @@ Player.prototype.update = function ()
 
 Player.prototype.render = function (graphics)
 {
-	graphics.lineStyle(0.2, 0, 1.0);
-
+	// draw body and sprite
 	var p = this.body.getPosition();
+	var angle = this.body.getAngle();
 	graphics.beginFill(0xFF0000, 1);
 	graphics.lineStyle(0.2, 0, 1.0);
 	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
+	// graphics.drawPolygon(offset_verts(p, rotate_verts(this.bodyVertices, angle)));
+	// sprite_vert = offset_verts(p, rotate_verts([planck.Vec2(0, -6)], angle))[0];
+	// this.sprite.centerX = sprite_vert.x;
+	// this.sprite.centerY = sprite_vert.y;
 
+	// draw wheels
 	var wb = this.wheelBack.getPosition();
 	var wf = this.wheelFront.getPosition();
 	graphics.beginFill(this.sensor.touchingB ? 0x00FF00 : 0x0000FF, 0.5);
