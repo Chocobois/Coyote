@@ -24,6 +24,7 @@ function Player ()
 
 Player.prototype.create = function ( group, x, y )
 {
+	// tunables
 	var bodyFD = {};
 	bodyFD.density = 1.0;
 	bodyFD.friction = 0.1;
@@ -45,12 +46,12 @@ Player.prototype.create = function ( group, x, y )
 
 	this.bodyRadius = 6;
 	this.wheelRadius = 1.4;
-	this.bodyVertices = [
-		Vec2(-10, 1),
-		Vec2(-10, -1),
-		Vec2(10, -1),
-		Vec2(10, 1),
-	];
+	// this.bodyVertices = [
+	// 	Vec2(-10, 1),
+	// 	Vec2(-10, -1),
+	// 	Vec2(10, -1),
+	// 	Vec2(10, 1),
+	// ];
 
 	// create body
 	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
@@ -63,20 +64,21 @@ Player.prototype.create = function ( group, x, y )
 	this.wheelFront = Global.physics.createDynamicBody(wheelFront_offset);
 	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
 
-	// join wheels to body with motors
+	// join wheels to body with wheel joints
 	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
 	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
 
+	// move body into specified x, y position
 	this.body.setPosition(xy_vector);
 	this.body.setAngle(Math.PI);
 	this.wheelBack.setPosition(xy_vector);
 	this.wheelFront.setPosition(xy_vector);
 
-	// Add wheel sensors
+	// add wheel sensors
 	this.sensor = {touchingF : false, touchingB : false};
 	this.add_sensors();
 
-	// add sprite, joined to body
+	// add sprite, will be joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite_left = function(){
@@ -85,7 +87,13 @@ Player.prototype.create = function ( group, x, y )
 	this.sprite_right = function(){
 		this.sprite.scale.set(0.05, 0.05);
 	};
-	this.sprite_right()
+	this.sprite_is_left = function(){
+		return this.sprite.scale.x < 0
+	};
+	this.sprite_is_right = function(){
+		return this.sprite.scale.x > 0
+	};
+	this.sprite_right();
 
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
@@ -187,6 +195,16 @@ Player.prototype.update = function ()
 		this.springFront.setMotorSpeed(0);
 		this.springFront.enableMotor(false);
 	}
+
+	// flip sprite if player turns around
+	var turn_threshold = 20.0;
+	var current_speed = this.springBack.getJointSpeed();
+	console.log(current_speed, this.sprite.scale.x ,this.sprite_is_left(), this.sprite_is_right())
+	if (this.sprite_is_right() && current_speed < -turn_threshold) {
+		this.sprite_left();
+	} else if (this.sprite_is_left() && current_speed > turn_threshold) {
+		this.sprite_right();
+	};
 
 	// jump
 	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
