@@ -71,25 +71,40 @@ Player.prototype.create = function ( group, x, y )
 	this.sensor = {touchingF : false, touchingB : false};
 	this.add_sensors();
 
-	// add sprite, to be joined to body. also add some helper funcs.
+	this.setupSprite();
+	this.setupAnimation();
+	this.setupInputs();
+};
+
+Player.prototype.setupSprite = function () {
+	// add coyote sprite
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
+
+	// helper functions
 	this.sprite_left = function(){
+		// turn the sprite to the left
 		this.sprite.scale.set(-this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_right = function(){
+		// turn the sprite to the right
 		this.sprite.scale.set(this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_is_left = function(){
+		// is the sprite already facing left?
 		return this.sprite.scale.x < 0
 	};
 	this.sprite_is_right = function(){
+		// is the sprite already facing right?
 		return this.sprite.scale.x > 0
 	};
-	this.sprite_right();
 
-	this.setupAnimation();
-	this.setupInputs();
+	// set initial facing
+	if (this.sprite_starts_facing_right) {
+        this.sprite_right();
+    } else {
+		this.sprite_left();
+	}
 };
 
 Player.prototype.setupInputs = function() {
