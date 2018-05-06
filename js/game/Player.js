@@ -37,7 +37,7 @@ Player.prototype.create = function ( group, x, y )
 
 	// create body
 	this.body = Global.physics.createDynamicBody(xy_vector);
-	this.body.createFixture(planck.Circle(this.bodyRadius), bodyFD);
+	this.body.createFixture(planck.Box(1, 10), bodyFD);
 
 	// create wheels
 	this.wheelBack = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelBack_offset));
@@ -49,7 +49,7 @@ Player.prototype.create = function ( group, x, y )
 	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition()));
 	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition()));
 
-	// join sprite to body
+	// add sprite, joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite.scale.set(0.05, 0.05);
@@ -111,10 +111,17 @@ Player.prototype.update = function ()
 
 Player.prototype.render = function (graphics)
 {
+	graphics.lineStyle(0.2, 0, 1.0);
+
 	var p = this.body.getPosition();
 	graphics.beginFill(0xFF0000, 1);
-	graphics.lineStyle(0, 0, 1.0);
-	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
+	graphics.lineStyle(0.2, 0, 1.0);
+	graphics.drawPolygon([
+		add_vectors(p, Vec2(-10, 1)), // todo: fix this to match box on line 40
+		add_vectors(p, Vec2(-10, -1)),
+		add_vectors(p, Vec2(10, -1)),
+		add_vectors(p, Vec2(10, 1)),
+	]);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
 
