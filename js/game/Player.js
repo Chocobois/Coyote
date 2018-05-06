@@ -99,7 +99,7 @@ Player.prototype.create = function ( group, x, y )
 Player.prototype.add_sensors = function()
 {
 	fd = {};
-	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius);
+	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius*2);
 	fd.isSensor = true;
 	var m_sensorF = this.wheelFront.createFixture(fd);
 	var m_sensorB = this.wheelBack.createFixture(fd);
@@ -112,17 +112,17 @@ Player.prototype.add_sensors = function()
 		var fixtureB = contact.getFixtureB();
 
 		if (fixtureA == m_sensorF) {
-			m_sensorF.m_userData.touchingF = true;
+			m_sensorF.m_userData.touchingF += 1;
 		}
 		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB = true;
+			m_sensorB.m_userData.touchingB += 1;
 		}
 
 		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF = true;
+			m_sensorF.m_userData.touchingF += 1;
 		}
 		if (fixtureB == m_sensorB) {
-			m_sensorB.m_userData.touchingB = true;
+			m_sensorB.m_userData.touchingB += 1;
 		}
 	});
 
@@ -132,17 +132,17 @@ Player.prototype.add_sensors = function()
 		var fixtureB = contact.getFixtureB();
 
 		if (fixtureA == m_sensorF) {
-			m_sensorF.m_userData.touchingF = false;
+			m_sensorF.m_userData.touchingF -= 1;
 		}
 		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB = false;
+			m_sensorB.m_userData.touchingB -= 1;
 		}
 
 		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF = false;
+			m_sensorF.m_userData.touchingF -= 1;
 		}
 		if (fixtureB == m_sensorB) {
-			m_sensorB.m_userData.touchingB = false;
+			m_sensorB.m_userData.touchingB -= 1;
 		}
 	});
 };
