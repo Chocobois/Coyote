@@ -6,6 +6,11 @@ function Player () {
 	this.bodyFD.density = 1.0;
 	this.bodyFD.friction = 0.1;
 
+	this.bottomFD = {};
+	this.bottomFD.density = 0.01;
+	this.bottomFD.friction = 0.0;
+	this.bottomFD.filterCategoryBits = 0x0000;
+
 	this.wheelFD = {};
 	this.wheelFD.density = 10.0;
 	this.wheelFD.friction = 0.9;
@@ -57,6 +62,7 @@ Player.prototype.setupGeometry = function () {
     // create body
     this.body = Global.physics.createDynamicBody(this.body_position);
     this.body.createFixture(planck.Circle(this.body_radius), this.bodyFD);
+    this.body.createFixture(planck.Circle(Vec2(0, -100), this.body_radius), this.bottomFD);
 
     // create wheels
     this.wheelBack = Global.physics.createDynamicBody(this.wheelBack_position);
@@ -314,6 +320,7 @@ Player.prototype.update = function () {
 		this.sprite.frame = a[f % a.length];
 	}
 
+	// Animate slick pop up. Should definitely go into a separate class
 	this.slick.x = this.sprite.x;
 	this.slick.y = this.sprite.y - 20;
 	if (this.trickLock) {
