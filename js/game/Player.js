@@ -21,6 +21,7 @@ function rotate_verts(verts, angle) {
 function Player ()
 {
 	self.SPRITE_SCALE = 0.05;
+	this.sprite_turn_threshold = 7.5;
 
 	this.step = 0;
 	this.jumpCharge = 0;
@@ -204,14 +205,6 @@ Player.prototype.update = function ()
 	// rotate sprite according to speed
 	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
 
-	// flip sprite if player turns around
-	var turn_threshold = 20.0;
-	var current_speed = this.springBack.getJointSpeed();
-	if (this.sprite_is_right() && current_speed < -turn_threshold) {
-		this.sprite_left();
-	} else if (this.sprite_is_left() && current_speed > turn_threshold) {
-		this.sprite_right();
-	}
 
 	if (!this.keys.space.isDown) {
 		// Jump release
@@ -280,10 +273,22 @@ Player.prototype.move = function (active, direction)
 	const motor_speed = 100.0;
 
 	this.setAnimation(active ? 'kick' : 'idle');
+
+	// set sprite direction
 	if (direction < 0)
 		this.sprite_left();
 	else if (direction > 0)
 		this.sprite_right();
+	else {
+		// if player changes direction without input, wait for wheels to spin faster
+		// than this.sprite_turn_threshold, so things don't flip out around zero.
+		let current_speed = this.springBack.getJointSpeed();
+		if (this.sprite_is_right() && current_speed < -this.sprite_turn_threshold) {
+			this.sprite_left();
+		} else if (this.sprite_is_left() && current_speed > this.sprite_turn_threshold) {
+			this.sprite_right();
+		}
+	}
 
 	var motor = function (wheel, sensor) {
 		if (sensor) {
