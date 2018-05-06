@@ -5,6 +5,7 @@ function Player ()
 
 	this.step = 0;
 	this.jumpCharge = 0;
+	this.motor_speed = 100.0;
 }
 
 Player.prototype.create = function ( group, x, y )
@@ -248,10 +249,7 @@ Player.prototype.update = function ()
 	this.sprite.frame = a[f % a.length];
 };
 
-Player.prototype.move = function (active, direction)
-{
-	const motor_speed = 100.0;
-
+Player.prototype.move = function (active, direction) {
 	this.setAnimation(active ? 'kick' : 'idle');
 
 	// set sprite direction
@@ -270,7 +268,13 @@ Player.prototype.move = function (active, direction)
 		}
 	}
 
-	var motor = function (wheel, sensor) {
+	// set sprite position
+	let body_pos = this.body.getPosition();
+	this.sprite.centerX = body_pos.x;
+	this.sprite.centerY = body_pos.y;
+
+	// spin motors
+	let motor = function (wheel, sensor, motor_speed) {
 		if (sensor) {
 			wheel.enableMotor(active);
 			wheel.setMotorSpeed(direction * motor_speed);
@@ -280,9 +284,10 @@ Player.prototype.move = function (active, direction)
 		}
 	};
 
-	motor(this.springBack, this.sensor.touchingB);
-	motor(this.springFront, this.sensor.touchingF);
+	motor(this.springBack, this.sensor.touchingB, this.motor_speed);
+	motor(this.springFront, this.sensor.touchingF, this.motor_speed);
 };
+
 
 Player.prototype.render = function (graphics)
 {
@@ -292,8 +297,6 @@ Player.prototype.render = function (graphics)
 	graphics.beginFill(0xFF0000, 1);
 	graphics.lineStyle(0.2, 0, 1.0);
 	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
-	this.sprite.centerX = p.x;
-	this.sprite.centerY = p.y;
 	// graphics.drawPolygon(offset_verts(p, rotate_verts(this.bodyVertices, angle)));
 	// sprite_vert = offset_verts(p, rotate_verts([planck.Vec2(0, -6)], angle))[0];
 	// this.sprite.centerX = sprite_vert.x;
