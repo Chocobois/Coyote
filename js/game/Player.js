@@ -1,12 +1,13 @@
 function Player ()
 {
-	self.SPRITE_SCALE = 0.05;
+	this.sprite_scale = 0.05;
 	this.sprite_turn_threshold = 7.5;
 
 	this.step = 0;
 	this.jumpCharge = 0;
 	this.motor_speed = 100.0;
 	this.debug = true;
+	this.lean_torque = 1000.0;
 }
 
 Player.prototype.create = function ( group, x, y )
@@ -74,10 +75,10 @@ Player.prototype.create = function ( group, x, y )
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite_left = function(){
-		this.sprite.scale.set(-self.SPRITE_SCALE, self.SPRITE_SCALE);
+		this.sprite.scale.set(-this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_right = function(){
-		this.sprite.scale.set(self.SPRITE_SCALE, self.SPRITE_SCALE);
+		this.sprite.scale.set(this.sprite_scale, this.sprite_scale);
 	};
 	this.sprite_is_left = function(){
 		return this.sprite.scale.x < 0
@@ -187,12 +188,13 @@ Player.prototype.update = function ()
 	// rotate sprite according to speed
 	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
 
+	// do this calculation early so we can use it twice
+	let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 
 	if (!this.keys.space.isDown) {
 		// Jump release
 		if (this.keys.space.justUp) {
 			if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
-				let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 				let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
 				let jump_vector = planck.Vec2(0, -jump_speed);  //straight up vector
 				if (this.jump_normal) {
@@ -206,9 +208,12 @@ Player.prototype.update = function ()
 			this.jump_start_time = undefined;
 		}
 
-		this.sprite.scale.y = self.SPRITE_SCALE;
-		this.sprite.alpha = 1.0;
+		// Animate
 		this.setAnimation('idle');
+
+		// Unset blinking animation
+		this.sprite.scale.y = this.sprite_scale;
+		this.sprite.alpha = 1.0;
 
 		// Move
 		if (left && right)
@@ -221,29 +226,32 @@ Player.prototype.update = function ()
 			this.move(false, 0);
 	}
 	else {
+		// Jump start
 		if (this.keys.space.justDown) {
 			this.jump_start_time = Date.now();
 		}
 
-		this.move(false, 0);
+		// Animate
 		this.setAnimation('crouch');
 
 		// Blinking animation upon full charge
-		let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
 		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
 			this.sprite.alpha = 1.8 - this.sprite.alpha;
 		}
+
+		// Don't move
+		this.move(false, 0);
 	}
 
-	// Lean
-	let lean_torque = 1000;
+	// lean
 	if (this.keys.q.isDown) {
-		this.body.applyAngularImpulse(-lean_torque)
+		this.body.applyAngularImpulse(-this.lean_torque)
 	}
 	if (this.keys.e.isDown) {
-		this.body.applyAngularImpulse(lean_torque)
+		this.body.applyAngularImpulse(this.lean_torque)
 	}
 
+	// progress through animations
 	this.step += 1;
 	var a = this.animations[this.state];
 	var f = Math.round( this.step / 10 );
@@ -288,7 +296,6 @@ Player.prototype.move = function (active, direction) {
 	motor(this.springBack, this.sensor.touchingB, this.motor_speed);
 	motor(this.springFront, this.sensor.touchingF, this.motor_speed);
 };
-
 
 Player.prototype.render = function (graphics) {
 	// draw some shapes to let us see the physics behind the scenes.
