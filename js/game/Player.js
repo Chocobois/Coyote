@@ -78,7 +78,7 @@ Player.prototype.create = function ( group, x, y )
 	this.sensor = {touchingF : false, touchingB : false};
 	this.add_sensors();
 
-	// add sprite, will be joined to body
+	// add sprite, to be joined to body. also add some helper funcs.
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite_left = function(){
@@ -95,11 +95,14 @@ Player.prototype.create = function ( group, x, y )
 	};
 	this.sprite_right();
 
+	// set up inputs
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
 	this.keys.a = Global.game.input.keyboard.addKey( Phaser.Keyboard.A );
 	this.keys.s = Global.game.input.keyboard.addKey( Phaser.Keyboard.S );
 	this.keys.d = Global.game.input.keyboard.addKey( Phaser.Keyboard.D );
+	this.keys.q = Global.game.input.keyboard.addKey( Phaser.Keyboard.Q );
+	this.keys.e = Global.game.input.keyboard.addKey( Phaser.Keyboard.E );
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
 };
 
@@ -194,6 +197,15 @@ Player.prototype.update = function ()
 	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
 		const jump_speed = -20000;
 		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
+	}
+
+	// Lean
+	let lean_torque = 1000;
+	if (this.keys.q.isDown) {
+		this.body.applyAngularImpulse(-lean_torque)
+	}
+	if (this.keys.e.isDown) {
+		this.body.applyAngularImpulse(lean_torque)
 	}
 };
 
