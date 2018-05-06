@@ -170,12 +170,10 @@ Player.prototype.update = function ()
 
 	// rotate sprite according to speed
 	this.sprite.angle = (this.body.getAngle() * 180 )/3.1415 -180;
-	console.log(this.body.getAngle());
 
 	// flip sprite if player turns around
 	var turn_threshold = 20.0;
 	var current_speed = this.springBack.getJointSpeed();
-	console.log(current_speed, this.sprite.scale.x ,this.sprite_is_left(), this.sprite_is_right())
 	if (this.sprite_is_right() && current_speed < -turn_threshold) {
 		this.sprite_left();
 	} else if (this.sprite_is_left() && current_speed > turn_threshold) {
