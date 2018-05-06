@@ -20,6 +20,10 @@ function rotate_verts(verts, angle) {
 
 function Player ()
 {
+	self.SPRITE_SCALE = 0.05;
+
+	this.step = 0;
+	this.jumpCharge = 0;
 }
 
 Player.prototype.create = function ( group, x, y )
@@ -82,10 +86,10 @@ Player.prototype.create = function ( group, x, y )
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite_left = function(){
-		this.sprite.scale.set(-0.05, 0.05);
+		this.sprite.scale.set(-self.SPRITE_SCALE, self.SPRITE_SCALE);
 	};
 	this.sprite_right = function(){
-		this.sprite.scale.set(0.05, 0.05);
+		this.sprite.scale.set(self.SPRITE_SCALE, self.SPRITE_SCALE);
 	};
 	this.sprite_is_left = function(){
 		return this.sprite.scale.x < 0
@@ -95,12 +99,33 @@ Player.prototype.create = function ( group, x, y )
 	};
 	this.sprite_right();
 
+	this.setupAnimation();
+
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
 	this.keys.a = Global.game.input.keyboard.addKey( Phaser.Keyboard.A );
 	this.keys.s = Global.game.input.keyboard.addKey( Phaser.Keyboard.S );
 	this.keys.d = Global.game.input.keyboard.addKey( Phaser.Keyboard.D );
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
+};
+
+Player.prototype.setupAnimation = function ()
+{
+	this.animations = {};
+	this.animations['idle'] = [0];
+	this.animations['crouch'] = [1];
+	this.animations['kick'] = [2,3,4,0];
+
+	this.setAnimation( 'idle' );
+};
+
+Player.prototype.setAnimation = function ( newState )
+{
+	if ( this.state != newState )
+	{
+		this.state = newState;
+		this.sprite.frame = this.animations[newState][0];
+	}
 };
 
 // Add sensor below player to detect ground. Activates this.sensor.touching
@@ -180,26 +205,54 @@ Player.prototype.update = function ()
 		this.sprite_right();
 	}
 
-	// Move
-	if (left && right)
-		this.move(true, 0);
-	else if (right)
-		this.move(true, 1);
-	else if (left)
-		this.move(true, -1);
-	else
-		this.move(false, 0);
+	if (!this.keys.space.isDown) {
+		// Jump
+		if (this.keys.space.justUp && (this.sensor.touchingF && this.sensor.touchingB)) {
+			const jump_speed = -4000000 * this.jumpCharge;
+			var p = this.body.getPosition();
+			console.log(this.body);
+			this.body.applyForceToCenter(new Vec2(0, jump_speed));
+		}
 
-	// Jump
-	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
-		const jump_speed = -20000;
-		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
+		this.sprite.scale.y = self.SPRITE_SCALE;
+		this.sprite.alpha = 1.0;
+		this.setAnimation('idle');
+		this.jumpCharge = 0;
+
+		// Move
+		if (left && right)
+			this.move(true, 0);
+		else if (right)
+			this.move(true, 1);
+		else if (left)
+			this.move(true, -1);
+		else
+			this.move(false, 0);
 	}
+	else {
+		this.move(false, 0);
+		this.setAnimation('crouch');
+		this.jumpCharge = Math.min(1, this.jumpCharge + 0.02);
+		if (this.jumpCharge == 1 && this.step%5==0) {
+			this.sprite.alpha = 1.8 - this.sprite.alpha;
+		}
+	}
+
+	this.step += 1;
+	var a = this.animations[this.state];
+	var f = Math.round( this.step / 10 );
+	this.sprite.frame = a[f % a.length];
 };
 
 Player.prototype.move = function (active, direction)
 {
 	const motor_speed = 100.0;
+
+	this.setAnimation(active ? 'kick' : 'idle');
+	if (direction < 0)
+		this.sprite_left();
+	else if (direction > 0)
+		this.sprite_right();
 
 	var motor = function (wheel, sensor) {
 		if (sensor) {

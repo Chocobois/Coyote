@@ -27,7 +27,7 @@ Terrain.prototype.create = function ( x, y )
 		Vec2(x + 40*10, y + 4*0.0),
 	];
 	for (var i = 0; i < 100; ++i) {
-		this.groundPoints.push(Vec2(x + 40*(11+i), y + 10*Math.random()));
+		this.groundPoints.push(Vec2(x + 40*(11+i), y + 20*Math.random()));
 	}
 
 	// Add ground points to physics

@@ -17,7 +17,7 @@ Global.Preload.prototype = {
 		/* Sprites */
 
 		// Coyote
-		this.load.image( 'coyote', 'assets/sprites/coyote.png' );
+		this.load.image( 'coyoteidle', 'assets/sprites/coyote.png' );
 		this.load.image( 'coyotecrouch', 'assets/sprites/coyotecrouch.png' );
 		this.load.image( 'coyotekick1', 'assets/sprites/coyotekick1.png' );
 		this.load.image( 'coyotekick2', 'assets/sprites/coyotekick2.png' );
@@ -38,6 +38,8 @@ Global.Preload.prototype = {
 		// Splash
 		this.load.image( 'cool', 'assets/sprites/cool.png' );
 		this.load.image( 'slick', 'assets/sprites/slick.png' );
+
+		this.load.spritesheet( 'coyote', 'assets/sprites/coyotesheet.png', 601, 374 );
 
 
 		/* Audio */
