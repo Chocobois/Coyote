@@ -304,9 +304,9 @@ Player.prototype.render = function (graphics)
 	// draw body and sprite
 	var p = this.body.getPosition();
 	var angle = this.body.getAngle();
-	graphics.beginFill(0xFF0000, 1);
+	// graphics.beginFill(0xFF0000, 1);
 	graphics.lineStyle(0.2, 0, 1.0);
-	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
+	// graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
 	// graphics.drawPolygon(offset_verts(p, rotate_verts(this.bodyVertices, angle)));
