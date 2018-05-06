@@ -81,6 +81,15 @@ Player.prototype.placeGeometry = function (x, y) {
 };
 
 Player.prototype.setupSprite = function () {
+	// Add slick sprite
+	this.trickLock = false;
+	this.slickPic = 'slick';
+	this.slick = Global.game.add.sprite(0, 0, this.slickPic);
+	this.slick.anchor.set(0.5, 0.5);	
+	this.slick.alpha = 0;
+	this.slick.scale.set(0.4/GRAPHICS_SCALE);
+
+
 	// add coyote sprite
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
@@ -141,7 +150,17 @@ Player.prototype.setupAnimation = function () {
 	this.animations['kick'] = [2,3,4,0];
 
 	// helper functions
-	this.setAnimation = function (newState) {
+	this.setAnimation = function (newState, force=false) {
+		if (newState == 'trick') {
+			this.sprite.loadTexture( 'coyotetrick1' );
+			this.state = 'trick';
+			this.trickLock = true;
+		}
+		if (this.trickLock)
+			return;
+		
+		this.sprite.loadTexture( 'coyote' );
+
 		if (this.state !== newState) {
 			this.state = newState;
 			this.sprite.frame = this.animations[newState][0];
@@ -151,6 +170,15 @@ Player.prototype.setupAnimation = function () {
 	// set initial animation
 	this.setAnimation('idle');
 };
+
+Player.prototype.trick = function() {
+	this.setAnimation('trick');
+
+	this.slick.alpha = 1.0;
+
+	this.slickPic = (this.slickPic == 'slick') ? 'cool' : 'slick'
+	this.slick.loadTexture( this.slickPic );
+}
 
 Player.prototype.setupSensors = function() {
 	this.sensor = {touchingF : false, touchingB : false};
@@ -223,6 +251,11 @@ Player.prototype.update = function () {
 				this.wheelFront.applyLinearImpulse(jump_vector, this.wheelFront.getPosition());
 			}
 			this.jump_start_time = undefined;
+
+			// No jump
+			if (boost == 0) {
+				this.trick();
+			}
 		}
 
 		// Animate
@@ -249,7 +282,8 @@ Player.prototype.update = function () {
 		}
 
 		// Animate
-		this.setAnimation('crouch');
+		if (this.state != 'trick')
+			this.setAnimation('crouch');
 
 		// Blinking animation upon full charge
 		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
@@ -268,14 +302,33 @@ Player.prototype.update = function () {
 		this.body.applyAngularImpulse(this.lean_torque)
 	}
 
+	if (this.sensor.touchingF || this.sensor.touchingB) {
+		this.trickLock = false;
+		this.setAnimation('idle');
+	}
+
 	// progress through animations
 	this.step += 1;
-	var a = this.animations[this.state];
-	var f = Math.round( this.step / this.steps_per_frame );
-	this.sprite.frame = a[f % a.length];
+	if (!this.trickLock) {
+		var a = this.animations[this.state];
+		var f = Math.round( this.step / this.steps_per_frame );
+		this.sprite.frame = a[f % a.length];
+	}
+
+	this.slick.x = this.sprite.x;
+	this.slick.y = this.sprite.y - 20;
+	if (this.trickLock) {
+		if (this.step%5==0) {
+			this.slick.alpha = 1.5 - this.slick.alpha;
+		}
+	} else {
+		this.slick.alpha = Math.max(0, this.slick.alpha - 0.1);
+	}
 
 
 	// rotate the wheels
+	this.wheelBackSprite.visible = !this.trickLock;
+	this.wheelFrontSprite.visible = !this.trickLock;
 	this.wheelBackSprite.angle += this.springBack.getJointSpeed();
 	this.wheelFrontSprite.angle += this.springFront.getJointSpeed();
 };
