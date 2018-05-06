@@ -1,5 +1,5 @@
 function Player () {
-	this.debug = true; // enable me during development to see what's going on.
+	this.debug = false; // enable me during development to see what's going on.
 
 	// FDs
 	this.bodyFD = {};
