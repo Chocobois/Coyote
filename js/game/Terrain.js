@@ -10,6 +10,7 @@ Terrain.prototype.create = function ( x, y )
 
 	var y = 100;
 	this.groundPoints = [
+		Vec2(-10, 5),
 		Vec2(10, y),
 		Vec2(GAME_WIDTH/2, y+10),
 		Vec2(GAME_WIDTH-10, y),
