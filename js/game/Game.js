@@ -36,7 +36,7 @@ Global.Game.prototype.create = function ()
 
 	// Create player object
 	this.playerGroup = Global.game.add.physicsGroup();
-	this.player.create(this.playerGroup, 30, 120);
+	this.player.create(this.playerGroup, 60, 150);
 };
 
 Global.Game.prototype.preRender = function ()

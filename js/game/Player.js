@@ -1,5 +1,5 @@
 function Player () {
-	this.debug = true; // enable me during development to see what's going on.
+	this.debug = false; // enable me during development to see what's going on.
 
 	// FDs
 	this.bodyFD = {};
@@ -273,6 +273,11 @@ Player.prototype.update = function () {
 	var a = this.animations[this.state];
 	var f = Math.round( this.step / this.steps_per_frame );
 	this.sprite.frame = a[f % a.length];
+
+
+	// rotate the wheels
+	this.wheelBackSprite.angle += this.springBack.getJointSpeed();
+	this.wheelFrontSprite.angle += this.springFront.getJointSpeed();
 };
 
 Player.prototype.move = function (active, direction) {
@@ -361,13 +366,6 @@ Player.prototype.render = function (graphics) {
     
     this.wheelFrontSprite.x = wheelFront_pos.x;
     this.wheelFrontSprite.y = wheelFront_pos.y;
-    
-    // rotate the wheels
-    this.wheelBackSprite.angle += this.springBack.getJointSpeed();
-    this.wheelFrontSprite.angle += this.springFront.getJointSpeed();
-    
-    
-    
 };
 
 // utils
