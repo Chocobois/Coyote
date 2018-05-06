@@ -107,7 +107,7 @@ Player.prototype.create = function ( group, x, y )
 Player.prototype.add_sensors = function()
 {
 	fd = {};
-	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius);
+	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius*2);
 	fd.isSensor = true;
 	var m_sensorF = this.wheelFront.createFixture(fd);
 	var m_sensorB = this.wheelBack.createFixture(fd);
@@ -120,17 +120,17 @@ Player.prototype.add_sensors = function()
 		var fixtureB = contact.getFixtureB();
 
 		if (fixtureA == m_sensorF) {
-			m_sensorF.m_userData.touchingF = true;
+			m_sensorF.m_userData.touchingF += 1;
 		}
 		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB = true;
+			m_sensorB.m_userData.touchingB += 1;
 		}
 
 		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF = true;
+			m_sensorF.m_userData.touchingF += 1;
 		}
 		if (fixtureB == m_sensorB) {
-			m_sensorB.m_userData.touchingB = true;
+			m_sensorB.m_userData.touchingB += 1;
 		}
 	});
 
@@ -140,17 +140,17 @@ Player.prototype.add_sensors = function()
 		var fixtureB = contact.getFixtureB();
 
 		if (fixtureA == m_sensorF) {
-			m_sensorF.m_userData.touchingF = false;
+			m_sensorF.m_userData.touchingF -= 1;
 		}
 		if (fixtureA == m_sensorB) {
-			m_sensorB.m_userData.touchingB = false;
+			m_sensorB.m_userData.touchingB -= 1;
 		}
 
 		if (fixtureB == m_sensorF) {
-			m_sensorF.m_userData.touchingF = false;
+			m_sensorF.m_userData.touchingF -= 1;
 		}
 		if (fixtureB == m_sensorB) {
-			m_sensorB.m_userData.touchingB = false;
+			m_sensorB.m_userData.touchingB -= 1;
 		}
 	});
 };
@@ -172,30 +172,6 @@ Player.prototype.update = function ()
 	this.sprite.angle = (this.body.getAngle() * 180 )/3.1415 -180;
 	console.log(this.body.getAngle());
 
-	// move motors
-	var motor_speed = 100.0;
-	if (left && right) {
-		this.springBack.setMotorSpeed(0);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(0);
-		this.springFront.enableMotor(true);
-	} else if (right) {
-		this.springBack.setMotorSpeed(motor_speed);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(motor_speed);
-		this.springFront.enableMotor(true);
-	} else if (left) {
-		this.springBack.setMotorSpeed(-motor_speed);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(-motor_speed);
-		this.springFront.enableMotor(true);
-	} else {
-		this.springBack.setMotorSpeed(0);
-		this.springBack.enableMotor(false);
-		this.springFront.setMotorSpeed(0);
-		this.springFront.enableMotor(false);
-	}
-
 	// flip sprite if player turns around
 	var turn_threshold = 20.0;
 	var current_speed = this.springBack.getJointSpeed();
@@ -204,13 +180,41 @@ Player.prototype.update = function ()
 		this.sprite_left();
 	} else if (this.sprite_is_left() && current_speed > turn_threshold) {
 		this.sprite_right();
-	};
+	}
 
-	// jump
+	// Move
+	if (left && right)
+		this.move(true, 0);
+	else if (right)
+		this.move(true, 1);
+	else if (left)
+		this.move(true, -1);
+	else
+		this.move(false, 0);
+
+	// Jump
 	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
 		const jump_speed = -20000;
 		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
 	}
+};
+
+Player.prototype.move = function (active, direction)
+{
+	const motor_speed = 100.0;
+
+	var motor = function (wheel, sensor) {
+		if (sensor) {
+			wheel.enableMotor(active);
+			wheel.setMotorSpeed(direction * motor_speed);
+		} else {
+			wheel.enableMotor(false);
+			wheel.setMotorSpeed(0);
+		}
+	};
+
+	motor(this.springBack, this.sensor.touchingB);
+	motor(this.springFront, this.sensor.touchingF);
 };
 
 Player.prototype.render = function (graphics)

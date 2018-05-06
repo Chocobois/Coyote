@@ -4,7 +4,7 @@ var Global = Global || {};
 Global.Game = function()
 {
 	this.step = 0;
-	this.planckWorld = planck.World({ gravity: planck.Vec2(0, 100) });
+	this.planckWorld = planck.World({ gravity: planck.Vec2(0, 150) });
 	Global.physics = this.planckWorld;
 
 	this.background = new Background();
