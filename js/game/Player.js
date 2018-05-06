@@ -1,76 +1,83 @@
-function Player ()
-{
-	this.sprite_scale = 0.05;
-	this.sprite_turn_threshold = 7.5;
-
-	this.step = 0;
-	this.jumpCharge = 0;
-	this.motor_speed = 100.0;
+function Player () {
 	this.debug = true;
-	this.lean_torque = 1000.0;
-}
 
-Player.prototype.create = function ( group, x, y )
-{
-	// tunables
-	var bodyFD = {};
-	bodyFD.density = 1.0;
-	bodyFD.friction = 0.1;
+	// FDs
+	this.bodyFD = {};
+	this.bodyFD.density = 1.0;
+	this.bodyFD.friction = 0.1;
 
-	var wheelFD = {};
-	wheelFD.density = 10.0;
-	wheelFD.friction = 0.9;
+	this.wheelFD = {};
+	this.wheelFD.density = 10.0;
+	this.wheelFD.friction = 0.9;
 
+	// joints
+	this.wheelJoint = {};
+	this.wheelJoint.motorSpeed = 0.0;
+	this.wheelJoint.maxMotorTorque = 15000.0;
+	this.wheelJoint.enableMotor = true;
+	this.wheelJoint.frequencyHz = 4;
+	this.wheelJoint.dampingRatio = 0.7;
+
+	// jump charging
 	this.jump_speed_max = 10000;
 	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
 	this.jump_start_time = undefined;
 	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
 
-	var joint = {};
-	joint.motorSpeed = 0.0;
-	joint.maxMotorTorque = 15000.0;
-	joint.enableMotor = true;
-	joint.frequencyHz = 4;
-	joint.dampingRatio = 0.7;
+	// animation
+	this.sprite_scale = 0.05;
+	this.sprite_starts_facing_right = true;
+	this.sprite_turn_threshold = 7.5;
+	this.step = 0;
+	this.steps_per_frame = 10;
 
-	var xy_vector = planck.Vec2(x, y);
-	var wheelBack_offset = planck.Vec2(-7, 0);
-	var wheelFront_offset = planck.Vec2(7, 0);
-
+	// geometry
+	this.body_position = planck.Vec2(0.0, 8);
 	this.body_radius = 6;
+
+	this.wheelBack_position = planck.Vec2(-7, 0);
+	this.wheelFront_position = planck.Vec2(7, 0);
 	this.wheel_radius = 1.4;
-	// this.bodyVertices = [
-	// 	Vec2(-10, 1),
-	// 	Vec2(-10, -1),
-	// 	Vec2(10, -1),
-	// 	Vec2(10, 1),
-	// ];
 
-	// create body
-	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
-	this.body.createFixture(planck.Circle(this.body_radius), bodyFD);
-	// this.body.createFixture(planck.Polygon(this.bodyVertices), bodyFD);
+	// vehicle
+	this.motor_speed = 100.0;
+	this.lean_torque = 1000.0;
+}
 
-	// create wheels
-	this.wheelBack = Global.physics.createDynamicBody(wheelBack_offset);
-	this.wheelBack.createFixture(planck.Circle(this.wheel_radius), wheelFD);
-	this.wheelFront = Global.physics.createDynamicBody(wheelFront_offset);
-	this.wheelFront.createFixture(planck.Circle(this.wheel_radius), wheelFD);
-
-	// join wheels to body with wheel joints
-	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
-	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
-
-	// move body into specified x, y position
-	this.body.setPosition(xy_vector);
-	this.body.setAngle(Math.PI);
-	this.wheelBack.setPosition(xy_vector);
-	this.wheelFront.setPosition(xy_vector);
-
+Player.prototype.create = function ( group, x, y ) {
+	this.setupGeometry();
+	this.placeGeometry(x, y);
 	this.setupSensors();
 	this.setupSprite();
 	this.setupAnimation();
 	this.setupInputs();
+};
+
+Player.prototype.setupGeometry = function () {
+    // create body
+    this.body = Global.physics.createDynamicBody(this.body_position);
+    this.body.createFixture(planck.Circle(this.body_radius), this.bodyFD);
+
+    // create wheels
+    this.wheelBack = Global.physics.createDynamicBody(this.wheelBack_position);
+    this.wheelBack.createFixture(planck.Circle(this.wheel_radius), this.wheelFD);
+    this.wheelFront = Global.physics.createDynamicBody(this.wheelFront_position);
+    this.wheelFront.createFixture(planck.Circle(this.wheel_radius), this.wheelFD);
+
+    // join wheels to body with wheel joints
+    this.springBack = Global.physics.createJoint(planck.WheelJoint(
+        this.wheelJoint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
+    this.springFront = Global.physics.createJoint(planck.WheelJoint(
+        this.wheelJoint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
+};
+
+Player.prototype.placeGeometry = function (x, y) {
+    // move body to specified x, y position
+    let xy = planck.Vec2(x, y);
+    this.body.setPosition(xy);
+    this.body.setAngle(Math.PI);
+    this.wheelBack.setPosition(xy);
+    this.wheelFront.setPosition(xy);
 };
 
 Player.prototype.setupSprite = function () {
@@ -138,7 +145,7 @@ Player.prototype.setupSensors = function() {
 	this.sensor = {touchingF : false, touchingB : false};
 	// Add sensor below player to detect ground. Activates this.sensor.touching
 	fd = {};
-	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheel_radius*2);
+	fd.shape = planck.Circle(planck.Vec2(0.0, 0.0), this.wheel_radius*2);
 	fd.isSensor = true;
 	let m_sensorF = this.wheelFront.createFixture(fd);
 	let m_sensorB = this.wheelBack.createFixture(fd);
