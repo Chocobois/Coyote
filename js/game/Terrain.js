@@ -23,7 +23,6 @@ Terrain.prototype.addGround = function(x, y)
 			points[0].y + Math.round(20 - 40*Math.random())
 		));
 	}
-	console.log(points);
 	this.groundList.push(points);
 
 	// Add ground points to physics

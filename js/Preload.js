@@ -11,7 +11,7 @@ Global.Preload.prototype = {
 
 		/* Fonts */
 
-		//this.load.bitmapFont( 'Balsamiq', 'assets/fonts/balsamiq_regular.png', 'assets/fonts/balsamiq_regular.fnt' );
+		this.load.bitmapFont( 'Balsamiq', 'assets/fonts/balsamiq_regular.png', 'assets/fonts/balsamiq_regular.fnt' );
 
 
 		/* Sprites */
