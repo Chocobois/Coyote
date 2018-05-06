@@ -101,28 +101,27 @@ Player.prototype.create = function ( group, x, y )
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
 };
 
-Player.prototype.setupAnimation = function ()
-{
+Player.prototype.setupAnimation = function () {
+	// possible animations
 	this.animations = {};
 	this.animations['idle'] = [0];
 	this.animations['crouch'] = [1];
 	this.animations['kick'] = [2,3,4,0];
 
-	this.setAnimation( 'idle' );
-};
+	// helper functions
+	this.setAnimation = function (newState) {
+		if (this.state !== newState) {
+			this.state = newState;
+			this.sprite.frame = this.animations[newState][0];
+		}
+	};
 
-Player.prototype.setAnimation = function ( newState )
-{
-	if ( this.state != newState )
-	{
-		this.state = newState;
-		this.sprite.frame = this.animations[newState][0];
-	}
+	// set initial animation
+	this.setAnimation('idle');
 };
 
 // Add sensor below player to detect ground. Activates this.sensor.touching
-Player.prototype.add_sensors = function()
-{
+Player.prototype.add_sensors = function() {
 	fd = {};
 	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheel_radius*2);
 	fd.isSensor = true;
@@ -172,21 +171,20 @@ Player.prototype.add_sensors = function()
 	});
 };
 
-Player.prototype.update = function ()
-{
-	var p = new Phaser.Point( 0, 0 );
-	var left = this.keys.left.isDown || this.keys.a.isDown;
-	var right = this.keys.right.isDown || this.keys.d.isDown;
-	var down = this.keys.down.isDown || this.keys.s.isDown;
-	var up = this.keys.up.isDown || this.keys.w.isDown;
+Player.prototype.update = function () {
+	let p = new Phaser.Point( 0, 0 );
+	let left = this.keys.left.isDown || this.keys.a.isDown;
+	let right = this.keys.right.isDown || this.keys.d.isDown;
+	let down = this.keys.down.isDown || this.keys.s.isDown;
+	let up = this.keys.up.isDown || this.keys.w.isDown;
 
 	if ( left )		p.x -= 1;
 	if ( right )	p.x += 1;
 	if ( up )		p.y -= 1;
 	if ( down )		p.y += 1;
 
-	// rotate sprite according to speed
-	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
+	// rotate sprite according to body angle
+	this.sprite.angle = (this.body.getAngle() * 180) / Math.PI - 180;
 
 	// do this calculation early so we can use it twice
 	let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
