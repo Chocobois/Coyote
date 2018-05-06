@@ -13,9 +13,20 @@ function Player ()
 
 Player.prototype.create = function ( group, x, y )
 {
-	var FD = {};
-	FD.density = 1.0;
-	FD.friction = 0.9;
+	var bodyFD = {};
+	bodyFD.density = 0.1;
+	bodyFD.friction = 0.1;
+
+	var wheelFD = {};
+	wheelFD.density = 1.0;
+	wheelFD.friction = 0.9;
+
+	var joint = {};
+	joint.motorSpeed = 0.0;
+	joint.maxMotorTorque = 20.0;
+	joint.enableMotor = true;
+	joint.frequencyHz = 30;
+	joint.dampingRatio = 40;
 
 	var xy_vector = planck.Vec2(x, y);
 	var wheelBack_offset = planck.Vec2(5, 9);
@@ -26,36 +37,23 @@ Player.prototype.create = function ( group, x, y )
 
 	// create body
 	this.body = Global.physics.createDynamicBody(xy_vector);
-	this.body.createFixture(planck.Circle(this.bodyRadius), FD);
+	this.body.createFixture(planck.Box(1, 10), bodyFD);
 
 	// create wheels
 	this.wheelBack = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelBack_offset));
-	this.wheelBack.createFixture(planck.Circle(this.wheelRadius), FD);
+	this.wheelBack.createFixture(planck.Circle(this.wheelRadius), wheelFD);
 	this.wheelFront = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelFront_offset));
-	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), FD);
+	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
 
-	// join wheels to body
-	this.springBack = Global.physics.createJoint(planck.DistanceJoint({
-		frequencyHz : 0.0,
-		dampingRatio : 0.0
-	}, this.body, this.body.getPosition(), this.wheelBack, this.wheelBack.getPosition()));
+	// join wheels to body with motors
+	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition()));
+	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition()));
 
-	this.springFront = Global.physics.createJoint(planck.DistanceJoint({
-		frequencyHz : 0.0,
-		dampingRatio : 0.0
-	}, this.body, this.body.getPosition(), this.wheelFront, this.wheelFront.getPosition()));
-
-	// join between wheels
-	this.springBetween = Global.physics.createJoint(planck.DistanceJoint({
-		frequencyHz : 0.0,
-		dampingRatio : 0.0
-	}, this.wheelBack, this.wheelBack.getPosition(), this.wheelFront, this.wheelFront.getPosition()));
-
-
+	// Add wheel sensors
 	this.sensor = {touchingF : false, touchingB : false};
 	this.add_sensors();
 
-	// join sprite to body
+	// add sprite, joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite.scale.set(0.05, 0.05);
@@ -136,10 +134,28 @@ Player.prototype.update = function ()
 	// rotate sprite according to speed
 	this.sprite.angle = vector_angle(this.wheelFront.getPosition(), this.wheelBack.getPosition());
 
-	// move left or right
-	if (left || right) {
-		const horizontal_speed = 20000;
-		this.body.applyForce(new Vec2(p.x*horizontal_speed, p.y), this.body.getPosition());
+	// move motors
+	var motor_speed = 5000.0;
+	if (left && right) {
+		this.springBack.setMotorSpeed(0);
+		this.springBack.enableMotor(true);
+		this.springFront.setMotorSpeed(0);
+		this.springFront.enableMotor(true);
+	} else if (right) {
+		this.springBack.setMotorSpeed(-motor_speed);
+		this.springBack.enableMotor(true);
+		this.springFront.setMotorSpeed(-motor_speed);
+		this.springFront.enableMotor(true);
+	} else if (left) {
+		this.springBack.setMotorSpeed(+motor_speed);
+		this.springBack.enableMotor(true);
+		this.springFront.setMotorSpeed(+motor_speed);
+		this.springFront.enableMotor(true);
+	} else {
+		this.springBack.setMotorSpeed(0);
+		this.springBack.enableMotor(false);
+		this.springFront.setMotorSpeed(0);
+		this.springFront.enableMotor(false);
 	}
 
 	// jump
@@ -151,10 +167,17 @@ Player.prototype.update = function ()
 
 Player.prototype.render = function (graphics)
 {
+	graphics.lineStyle(0.2, 0, 1.0);
+
 	var p = this.body.getPosition();
-	graphics.beginFill(0xFF0000, 0.5);
-	graphics.lineStyle(0, 0, 1.0);
-	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
+	graphics.beginFill(0xFF0000, 1);
+	graphics.lineStyle(0.2, 0, 1.0);
+	graphics.drawPolygon([
+		add_vectors(p, Vec2(-10, 1)), // todo: fix this to match box on line 40
+		add_vectors(p, Vec2(-10, -1)),
+		add_vectors(p, Vec2(10, -1)),
+		add_vectors(p, Vec2(10, 1)),
+	]);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
 
