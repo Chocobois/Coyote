@@ -89,8 +89,10 @@ Player.prototype.create = function ( group, x, y )
 	this.sprite_right();
 
 	this.setupAnimation();
+	this.setupInputs();
+};
 
-	// set up inputs
+Player.prototype.setupInputs = function() {
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
 	this.keys.a = Global.game.input.keyboard.addKey( Phaser.Keyboard.A );
