@@ -37,6 +37,11 @@ Player.prototype.create = function ( group, x, y )
 	wheelFD.density = 10.0;
 	wheelFD.friction = 0.9;
 
+	this.jump_speed_max = 40000;
+	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
+	this.jump_start_time = undefined;
+	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
+
 	var joint = {};
 	joint.motorSpeed = 0.0;
 	joint.maxMotorTorque = 15000.0;
@@ -82,7 +87,7 @@ Player.prototype.create = function ( group, x, y )
 	this.sensor = {touchingF : false, touchingB : false};
 	this.add_sensors();
 
-	// add sprite, will be joined to body
+	// add sprite, to be joined to body. also add some helper funcs.
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
 	this.sprite.anchor.set(0.5, 0.5);
 	this.sprite_left = function(){
@@ -101,11 +106,14 @@ Player.prototype.create = function ( group, x, y )
 
 	this.setupAnimation();
 
+	// set up inputs
 	this.keys = Global.game.input.keyboard.createCursorKeys();
 	this.keys.w = Global.game.input.keyboard.addKey( Phaser.Keyboard.W );
 	this.keys.a = Global.game.input.keyboard.addKey( Phaser.Keyboard.A );
 	this.keys.s = Global.game.input.keyboard.addKey( Phaser.Keyboard.S );
 	this.keys.d = Global.game.input.keyboard.addKey( Phaser.Keyboard.D );
+	this.keys.q = Global.game.input.keyboard.addKey( Phaser.Keyboard.Q );
+	this.keys.e = Global.game.input.keyboard.addKey( Phaser.Keyboard.E );
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
 };
 
@@ -194,7 +202,7 @@ Player.prototype.update = function ()
 	if ( down )		p.y += 1;
 
 	// rotate sprite according to speed
-	this.sprite.angle = (this.body.getAngle() * 180 )/3.1415 -180;
+	this.sprite.angle = (this.body.getAngle() * 180 )/Math.PI -180;
 
 	// flip sprite if player turns around
 	var turn_threshold = 20.0;
@@ -206,18 +214,24 @@ Player.prototype.update = function ()
 	}
 
 	if (!this.keys.space.isDown) {
-		// Jump
-		if (this.keys.space.justUp && (this.sensor.touchingF && this.sensor.touchingB)) {
-			const jump_speed = -4000000 * this.jumpCharge;
-			var p = this.body.getPosition();
-			console.log(this.body);
-			this.body.applyForceToCenter(new Vec2(0, jump_speed));
+		// Jump release
+		if (this.keys.space.justUp) {
+			if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
+				let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
+				let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
+				let jump_vector = planck.Vec2(0, -jump_speed);  //straight up vector
+				if (this.jump_normal) {
+					// rotate in the direction of normal
+					jump_vector = rotate_verts([planck.Vec2(0, -jump_speed)], this.body.getAngle() - Math.PI)[0];
+				}
+				this.body.applyLinearImpulse(jump_vector, this.body.getPosition());
+			}
+			this.jump_start_time = undefined;
 		}
 
 		this.sprite.scale.y = self.SPRITE_SCALE;
 		this.sprite.alpha = 1.0;
 		this.setAnimation('idle');
-		this.jumpCharge = 0;
 
 		// Move
 		if (left && right)
@@ -230,12 +244,27 @@ Player.prototype.update = function ()
 			this.move(false, 0);
 	}
 	else {
+		if (this.keys.space.justDown) {
+			this.jump_start_time = Date.now();
+		}
+
 		this.move(false, 0);
 		this.setAnimation('crouch');
-		this.jumpCharge = Math.min(1, this.jumpCharge + 0.02);
-		if (this.jumpCharge == 1 && this.step%5==0) {
+
+		// Blinking animation upon full charge
+		let jump_hold_time = Math.min(Date.now() - this.jump_start_time, this.jump_charge_time);
+		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
 			this.sprite.alpha = 1.8 - this.sprite.alpha;
 		}
+	}
+
+	// Lean
+	let lean_torque = 1000;
+	if (this.keys.q.isDown) {
+		this.body.applyAngularImpulse(-lean_torque)
+	}
+	if (this.keys.e.isDown) {
+		this.body.applyAngularImpulse(lean_torque)
 	}
 
 	this.step += 1;
