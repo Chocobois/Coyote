@@ -12,8 +12,6 @@ Global.Game = function()
 	this.player = new Player();
 };
 
-var CIRCLE_RADIUS = 10;
-
 Global.Game.prototype.create = function ()
 {
 	Global.game.stage.backgroundColor = '#eeeeee';
