@@ -23,46 +23,49 @@ function Player ()
 Player.prototype.create = function ( group, x, y )
 {
 	var bodyFD = {};
-	bodyFD.density = 0.1;
+	bodyFD.density = 1.0;
 	bodyFD.friction = 0.1;
 
 	var wheelFD = {};
-	wheelFD.density = 1.0;
+	wheelFD.density = 10.0;
 	wheelFD.friction = 0.9;
 
 	var joint = {};
 	joint.motorSpeed = 0.0;
-	joint.maxMotorTorque = 20.0;
+	joint.maxMotorTorque = 15000.0;
 	joint.enableMotor = true;
 	joint.frequencyHz = 4;
 	joint.dampingRatio = 0.7;
 
 	var xy_vector = planck.Vec2(x, y);
-	var wheelBack_offset = planck.Vec2(5, 9);
-	var wheelFront_offset = planck.Vec2(-5, 9);
+	var wheelBack_offset = planck.Vec2(-7, 0);
+	var wheelFront_offset = planck.Vec2(7, 0);
 
-	this.bodyRadius = 10;
-	this.wheelRadius = 1;
+	this.bodyRadius = 6;
+	this.wheelRadius = 1.4;
 
 	// create body
-	this.bodyVerticies = [
-		Vec2(-10, 1),
-		Vec2(-10, -1),
-		Vec2(10, -1),
-		Vec2(10, 1),
-	];
-	this.body = Global.physics.createDynamicBody(xy_vector);
-	this.body.createFixture(planck.Polygon(this.bodyVerticies), bodyFD);
+	this.body = Global.physics.createDynamicBody(Vec2(0.0, 8));
+	this.body.createFixture(planck.Circle(this.bodyRadius), bodyFD);
 
 	// create wheels
-	this.wheelBack = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelBack_offset));
+	this.wheelBack = Global.physics.createDynamicBody(wheelBack_offset);
 	this.wheelBack.createFixture(planck.Circle(this.wheelRadius), wheelFD);
-	this.wheelFront = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelFront_offset));
+	this.wheelFront = Global.physics.createDynamicBody(wheelFront_offset);
 	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
 
 	// join wheels to body with motors
 	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
 	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
+
+	this.body.setPosition(xy_vector);
+	this.body.setAngle(Math.PI);
+	this.wheelBack.setPosition(xy_vector);
+	this.wheelFront.setPosition(xy_vector);
+
+	// Add wheel sensors
+	this.sensor = {touchingF : false, touchingB : false};
+	this.add_sensors();
 
 	// add sprite, joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
@@ -75,6 +78,58 @@ Player.prototype.create = function ( group, x, y )
 	this.keys.s = Global.game.input.keyboard.addKey( Phaser.Keyboard.S );
 	this.keys.d = Global.game.input.keyboard.addKey( Phaser.Keyboard.D );
 	this.keys.space = Global.game.input.keyboard.addKey( Phaser.Keyboard.SPACEBAR );
+};
+
+// Add sensor below player to detect ground. Activates this.sensor.touching
+Player.prototype.add_sensors = function()
+{
+	fd = {};
+	fd.shape = planck.Circle(Vec2(0.0, 0.0), this.wheelRadius);
+	fd.isSensor = true;
+	var m_sensorF = this.wheelFront.createFixture(fd);
+	var m_sensorB = this.wheelBack.createFixture(fd);
+	m_sensorF.m_userData = this.sensor;
+	m_sensorB.m_userData = this.sensor;
+
+	// Implement contact listener.
+	Global.physics.on('begin-contact', function(contact) {
+		var fixtureA = contact.getFixtureA();
+		var fixtureB = contact.getFixtureB();
+
+		if (fixtureA == m_sensorF) {
+			m_sensorF.m_userData.touchingF = true;
+		}
+		if (fixtureA == m_sensorB) {
+			m_sensorB.m_userData.touchingB = true;
+		}
+
+		if (fixtureB == m_sensorF) {
+			m_sensorF.m_userData.touchingF = true;
+		}
+		if (fixtureB == m_sensorB) {
+			m_sensorB.m_userData.touchingB = true;
+		}
+	});
+
+	// Implement contact listener.
+	Global.physics.on('end-contact', function(contact) {
+		var fixtureA = contact.getFixtureA();
+		var fixtureB = contact.getFixtureB();
+
+		if (fixtureA == m_sensorF) {
+			m_sensorF.m_userData.touchingF = false;
+		}
+		if (fixtureA == m_sensorB) {
+			m_sensorB.m_userData.touchingB = false;
+		}
+
+		if (fixtureB == m_sensorF) {
+			m_sensorF.m_userData.touchingF = false;
+		}
+		if (fixtureB == m_sensorB) {
+			m_sensorB.m_userData.touchingB = false;
+		}
+	});
 };
 
 Player.prototype.update = function ()
@@ -94,21 +149,21 @@ Player.prototype.update = function ()
 	this.sprite.angle = vector_angle(this.wheelFront.getPosition(), this.wheelBack.getPosition());
 
 	// move motors
-	var motor_speed = 5000.0;
+	var motor_speed = 100.0;
 	if (left && right) {
 		this.springBack.setMotorSpeed(0);
 		this.springBack.enableMotor(true);
 		this.springFront.setMotorSpeed(0);
 		this.springFront.enableMotor(true);
 	} else if (right) {
+		this.springBack.setMotorSpeed(motor_speed);
+		this.springBack.enableMotor(true);
+		this.springFront.setMotorSpeed(motor_speed);
+		this.springFront.enableMotor(true);
+	} else if (left) {
 		this.springBack.setMotorSpeed(-motor_speed);
 		this.springBack.enableMotor(true);
 		this.springFront.setMotorSpeed(-motor_speed);
-		this.springFront.enableMotor(true);
-	} else if (left) {
-		this.springBack.setMotorSpeed(+motor_speed);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(+motor_speed);
 		this.springFront.enableMotor(true);
 	} else {
 		this.springBack.setMotorSpeed(0);
@@ -118,9 +173,9 @@ Player.prototype.update = function ()
 	}
 
 	// jump
-	if (up) {
-		const jump_speed = -200000;
-		this.body.applyForce(new Vec2(0, jump_speed), this.body.getPosition());
+	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
+		const jump_speed = -20000;
+		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
 	}
 };
 
@@ -131,14 +186,21 @@ Player.prototype.render = function (graphics)
 	var p = this.body.getPosition();
 	graphics.beginFill(0xFF0000, 1);
 	graphics.lineStyle(0.2, 0, 1.0);
-	graphics.drawPolygon(add_vector_to_verticies(p, this.bodyVerticies));
+	graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
 
-	graphics.beginFill(0x00FF00, 1);
 	var wb = this.wheelBack.getPosition();
 	var wf = this.wheelFront.getPosition();
+	graphics.beginFill(this.sensor.touchingB ? 0x00FF00 : 0x0000FF, 0.5);
 	graphics.drawCircle(wb.x, wb.y, this.wheelRadius * 2);
+	graphics.beginFill(this.sensor.touchingF ? 0x00FF00 : 0x0000FF, 0.5);
 	graphics.drawCircle(wf.x, wf.y, this.wheelRadius * 2);
 
+	graphics.lineStyle(1, 0xFF0000, 1.0);
+	graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
+	graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
+	graphics.lineStyle(1, 0xFF0000, 1.0);
+	graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
+	graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
 };
