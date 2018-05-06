@@ -20,7 +20,7 @@ Terrain.prototype.addGround = function(x, y)
 	for (var i = 0; i < 100; ++i) {
 		points.push(Vec2(
 			points[i].x + Math.round(20 + 40*Math.random()),
-			points[i].y + Math.round(20 - 40*Math.random())
+			points[0].y + Math.round(20 - 40*Math.random())
 		));
 	}
 	console.log(points);
