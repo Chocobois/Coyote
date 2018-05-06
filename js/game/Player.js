@@ -150,7 +150,7 @@ Player.prototype.setupAnimation = function () {
 	this.animations['kick'] = [2,3,4,0];
 
 	// helper functions
-	this.setAnimation = function (newState, force=false) {
+	this.setAnimation = function (newState) {
 		if (newState == 'trick') {
 			this.sprite.loadTexture( 'coyotetrick1' );
 			this.state = 'trick';
@@ -184,7 +184,7 @@ Player.prototype.setupSensors = function() {
 	this.sensor = {touchingF : false, touchingB : false};
 	// Add sensor below player to detect ground. Activates this.sensor.touching
 	fd = {};
-	fd.shape = planck.Circle(planck.Vec2(0.0, 0.0), this.wheel_radius*2);
+	fd.shape = planck.Circle(planck.Vec2(0.0, 0.0), this.wheel_radius*3);
 	fd.isSensor = true;
 	let m_sensorF = this.wheelFront.createFixture(fd);
 	let m_sensorB = this.wheelBack.createFixture(fd);
@@ -282,8 +282,7 @@ Player.prototype.update = function () {
 		}
 
 		// Animate
-		if (this.state != 'trick')
-			this.setAnimation('crouch');
+		this.setAnimation('crouch');
 
 		// Blinking animation upon full charge
 		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
@@ -302,7 +301,7 @@ Player.prototype.update = function () {
 		this.body.applyAngularImpulse(this.lean_torque)
 	}
 
-	if (this.sensor.touchingF || this.sensor.touchingB) {
+	if (this.trickLock && (this.sensor.touchingF || this.sensor.touchingB)) {
 		this.trickLock = false;
 		this.setAnimation('idle');
 	}
