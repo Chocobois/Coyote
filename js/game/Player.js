@@ -7,6 +7,15 @@ function vector_angle(a, b) {
 	return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
 }
 
+function add_vector_to_verticies(p, verts) {
+	// for v in verts: yield add_vectors(p, v)
+	var new_verts = [];
+	verts.forEach(function(item, index, array){
+		new_verts.push(add_vectors, p, item);
+	});
+	return new_verts;
+}
+
 function Player ()
 {
 }
@@ -25,8 +34,8 @@ Player.prototype.create = function ( group, x, y )
 	joint.motorSpeed = 0.0;
 	joint.maxMotorTorque = 20.0;
 	joint.enableMotor = true;
-	joint.frequencyHz = 30;
-	joint.dampingRatio = 40;
+	joint.frequencyHz = 4;
+	joint.dampingRatio = 0.7;
 
 	var xy_vector = planck.Vec2(x, y);
 	var wheelBack_offset = planck.Vec2(5, 9);
@@ -36,8 +45,14 @@ Player.prototype.create = function ( group, x, y )
 	this.wheelRadius = 1;
 
 	// create body
+	this.bodyVerticies = [
+		Vec2(-10, 1),
+		Vec2(-10, -1),
+		Vec2(10, -1),
+		Vec2(10, 1),
+	];
 	this.body = Global.physics.createDynamicBody(xy_vector);
-	this.body.createFixture(planck.Box(1, 10), bodyFD);
+	this.body.createFixture(planck.Polygon(this.bodyVerticies), bodyFD);
 
 	// create wheels
 	this.wheelBack = Global.physics.createDynamicBody(add_vectors(xy_vector, wheelBack_offset));
@@ -46,8 +61,8 @@ Player.prototype.create = function ( group, x, y )
 	this.wheelFront.createFixture(planck.Circle(this.wheelRadius), wheelFD);
 
 	// join wheels to body with motors
-	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition()));
-	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition()));
+	this.springBack = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelBack, this.wheelBack.getPosition(), planck.Vec2(0.0, 1.0)));
+	this.springFront = Global.physics.createJoint(planck.WheelJoint(joint, this.body, this.wheelFront, this.wheelFront.getPosition(), planck.Vec2(0.0, 1.0)));
 
 	// add sprite, joined to body
 	this.sprite = Global.game.add.sprite(0, 0, "coyote");
@@ -116,12 +131,7 @@ Player.prototype.render = function (graphics)
 	var p = this.body.getPosition();
 	graphics.beginFill(0xFF0000, 1);
 	graphics.lineStyle(0.2, 0, 1.0);
-	graphics.drawPolygon([
-		add_vectors(p, Vec2(-10, 1)), // todo: fix this to match box on line 40
-		add_vectors(p, Vec2(-10, -1)),
-		add_vectors(p, Vec2(10, -1)),
-		add_vectors(p, Vec2(10, 1)),
-	]);
+	graphics.drawPolygon(add_vector_to_verticies(p, this.bodyVerticies));
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
 
