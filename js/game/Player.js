@@ -1,23 +1,3 @@
-function offset_verts(offset, verts) {
-	var new_verts = [];
-	verts.forEach(function(item){
-		new_verts.push(item.clone().add(offset));
-	});
-	return new_verts;
-}
-
-function rotate_verts(verts, angle) {
-	var around = Vec2(0, 0);  // rotate around this point
-	var new_verts = [];
-	verts.forEach(function(item) {
-		new_verts.push(planck.Vec2(
-			(Math.cos(angle) * item.x - Math.sin(angle) * item.y),
-			(Math.sin(angle) * item.x + Math.cos(angle) * item.y)
-		));
-    });
-	return new_verts;
-}
-
 function Player ()
 {
 	self.SPRITE_SCALE = 0.05;
@@ -334,3 +314,17 @@ Player.prototype.render = function (graphics)
 	graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
 	graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
 };
+
+// utils
+function rotate_vert(vert, angle) {
+	return planck.Vec2(
+		(Math.cos(angle) * vert.x - Math.sin(angle) * vert.y),
+		(Math.sin(angle) * vert.x + Math.cos(angle) * vert.y)
+	)
+}
+
+function rotate_verts(verts, angle) {
+	return verts.map(function(item) {
+		return rotate_vert(item, angle);
+	});
+}
