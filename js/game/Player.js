@@ -305,7 +305,7 @@ Player.prototype.render = function (graphics)
 	var p = this.body.getPosition();
 	var angle = this.body.getAngle();
 	// graphics.beginFill(0xFF0000, 1);
-	graphics.lineStyle(0.2, 0, 1.0);
+	graphics.lineStyle(0.2, 0x8B461D, 1.0);
 	// graphics.drawCircle(p.x, p.y, this.bodyRadius * 2);
 	this.sprite.centerX = p.x;
 	this.sprite.centerY = p.y;
@@ -317,15 +317,15 @@ Player.prototype.render = function (graphics)
 	// draw wheels
 	var wb = this.wheelBack.getPosition();
 	var wf = this.wheelFront.getPosition();
-	graphics.beginFill(this.sensor.touchingB ? 0x00FF00 : 0x0000FF, 0.5);
+	graphics.beginFill(this.sensor.touchingB ? 0x8F4E21 : 0xB8672F, 0.5);
 	graphics.drawCircle(wb.x, wb.y, this.wheelRadius * 2);
-	graphics.beginFill(this.sensor.touchingF ? 0x00FF00 : 0x0000FF, 0.5);
+	graphics.beginFill(this.sensor.touchingF ? 0x8F4E21 : 0xB8672F, 0.5);
 	graphics.drawCircle(wf.x, wf.y, this.wheelRadius * 2);
 
-	graphics.lineStyle(1, 0xFF0000, 1.0);
-	graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
-	graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
-	graphics.lineStyle(1, 0xFF0000, 1.0);
-	graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
-	graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
+	// graphics.lineStyle(1, 0xFF0000, 1.0);
+	// graphics.moveTo(this.springBack.getAnchorA().x, this.springBack.getAnchorA().y);
+	// graphics.lineTo(this.springBack.getAnchorB().x, this.springBack.getAnchorB().y);
+	// graphics.lineStyle(1, 0xFF0000, 1.0);
+	// graphics.moveTo(this.springFront.getAnchorA().x, this.springFront.getAnchorA().y);
+	// graphics.lineTo(this.springFront.getAnchorB().x, this.springFront.getAnchorB().y);
 };
