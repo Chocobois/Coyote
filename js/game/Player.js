@@ -37,7 +37,7 @@ Player.prototype.create = function ( group, x, y )
 	wheelFD.density = 10.0;
 	wheelFD.friction = 0.9;
 
-	this.jump_speed_max = 40000;
+	this.jump_speed_max = 10000;
 	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
 	this.jump_start_time = undefined;
 	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
@@ -225,6 +225,8 @@ Player.prototype.update = function ()
 					jump_vector = rotate_verts([planck.Vec2(0, -jump_speed)], this.body.getAngle() - Math.PI)[0];
 				}
 				this.body.applyLinearImpulse(jump_vector, this.body.getPosition());
+				this.wheelBack.applyLinearImpulse(jump_vector, this.wheelBack.getPosition());
+				this.wheelFront.applyLinearImpulse(jump_vector, this.wheelFront.getPosition());
 			}
 			this.jump_start_time = undefined;
 		}
