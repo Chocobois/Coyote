@@ -163,8 +163,6 @@ Player.prototype.setupSensors = function() {
 			m_sensorB.m_userData.touchingB += 1;
 		}
 	});
-
-	// Implement contact listener.
 	Global.physics.on('end-contact', function(contact) {
 		let fixtureA = contact.getFixtureA();
 		let fixtureB = contact.getFixtureB();
@@ -258,7 +256,7 @@ Player.prototype.update = function () {
 	// progress through animations
 	this.step += 1;
 	var a = this.animations[this.state];
-	var f = Math.round( this.step / 10 );
+	var f = Math.round( this.step / this.steps_per_frame );
 	this.sprite.frame = a[f % a.length];
 };
 
