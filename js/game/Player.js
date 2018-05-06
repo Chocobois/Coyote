@@ -18,7 +18,7 @@ Player.prototype.create = function ( group, x, y )
 	bodyFD.friction = 0.1;
 
 	var wheelFD = {};
-	wheelFD.density = 5.0;
+	wheelFD.density = 10.0;
 	wheelFD.friction = 0.9;
 
 	var joint = {};
