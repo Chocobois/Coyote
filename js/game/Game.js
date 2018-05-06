@@ -25,16 +25,18 @@ Global.Game.prototype.create = function ()
 
 	// Create background
 	this.background.create();
+	this.background.addHalfpipe(0, 83);
 
 	// Used for physics drawing
 	this.graphics = Global.game.add.graphics(0, 0);
 
 	// Create terrain
 	this.terrain.create();
+	this.terrain.addHalfpipe(0, 83);
 
 	// Create player object
 	this.playerGroup = Global.game.add.physicsGroup();
-	this.player.create(this.playerGroup, 100, 80);
+	this.player.create(this.playerGroup, 30, 120);
 };
 
 Global.Game.prototype.preRender = function ()

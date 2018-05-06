@@ -20,7 +20,7 @@ function Player () {
 
 	// jump charging
 	this.jump_speed_max = 10000;
-	this.jump_charge_time = 1000; // time in ms it takes to fully charge jump
+	this.jump_charge_time = 500; // time in ms it takes to fully charge jump
 	this.jump_start_time = undefined;
 	this.jump_normal = false; // enable me to jump perpendicularly to the ground, sonic-style
 
@@ -196,8 +196,12 @@ Player.prototype.update = function () {
 	if (!this.keys.space.isDown) {
 		// Jump release
 		if (this.keys.space.justUp) {
-			if (this.jump_start_time && this.sensor.touchingF && this.sensor.touchingB) {
-				let jump_speed = this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
+			// Both wheels, 1. One wheel, 0.7.
+			var boost = (this.sensor.touchingF>0) + (this.sensor.touchingB>0);
+			boost = Math.min(1, boost*0.7);
+
+			if (this.jump_start_time) {
+				let jump_speed = boost * this.jump_speed_max * (jump_hold_time / this.jump_charge_time);
 				let jump_vector = planck.Vec2(0, -jump_speed);  //straight up vector
 				if (this.jump_normal) {
 					// rotate in the direction of normal
@@ -211,7 +215,7 @@ Player.prototype.update = function () {
 		}
 
 		// Animate
-		this.setAnimation(left || right ? 'kick' : 'idle');
+		this.setAnimation(left ^ right ? 'kick' : 'idle');
 
 		// Unset blinking animation
 		this.sprite.scale.y = this.sprite_scale;
@@ -238,7 +242,7 @@ Player.prototype.update = function () {
 
 		// Blinking animation upon full charge
 		if (jump_hold_time == this.jump_charge_time && this.step%5==0) {
-			this.sprite.alpha = 1.8 - this.sprite.alpha;
+			this.sprite.alpha = 1.5 - this.sprite.alpha;
 		}
 
 		// Don't move

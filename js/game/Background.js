@@ -21,7 +21,6 @@ Background.prototype.create = function ()
 	var s = 0.8;
 	this.desert.scale.set(s/GRAPHICS_SCALE, s/GRAPHICS_SCALE);
 
-	//this.halfpipe = Global.game.add.sprite(0, 0, 'halfpipe');
 	//this.saloon = Global.game.add.sprite(0, 0, 'saloon');
 	//this.floor1 = Global.game.add.sprite(0, 0, 'floor1');
 	//this.floor2 = Global.game.add.sprite(0, 0, 'floor2');
@@ -41,4 +40,12 @@ Background.prototype.update = function()
 
 Background.prototype.render = function( graphics )
 {
+};
+
+
+Background.prototype.addHalfpipe = function(x, y)
+{
+	this.halfpipe = Global.game.add.sprite(x, y, 'halfpipe');
+	var s = 0.8;
+	this.halfpipe.scale.set(s/GRAPHICS_SCALE, s/GRAPHICS_SCALE);
 };
