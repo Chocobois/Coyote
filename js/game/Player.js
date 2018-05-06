@@ -138,35 +138,39 @@ Player.prototype.update = function ()
 	// rotate sprite according to speed
 	this.sprite.angle = vector_angle(this.wheelFront.getPosition(), this.wheelBack.getPosition());
 
-	// move motors
-	var motor_speed = 100.0;
-	if (left && right) {
-		this.springBack.setMotorSpeed(0);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(0);
-		this.springFront.enableMotor(true);
-	} else if (right) {
-		this.springBack.setMotorSpeed(motor_speed);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(motor_speed);
-		this.springFront.enableMotor(true);
-	} else if (left) {
-		this.springBack.setMotorSpeed(-motor_speed);
-		this.springBack.enableMotor(true);
-		this.springFront.setMotorSpeed(-motor_speed);
-		this.springFront.enableMotor(true);
-	} else {
-		this.springBack.setMotorSpeed(0);
-		this.springBack.enableMotor(false);
-		this.springFront.setMotorSpeed(0);
-		this.springFront.enableMotor(false);
-	}
+	// Move
+	if (left && right)
+		this.move(true, 0);
+	else if (right)
+		this.move(true, 1);
+	else if (left)
+		this.move(true, -1);
+	else
+		this.move(false, 0);
 
-	// jump
+	// Jump
 	if (this.keys.space.justDown && (this.sensor.touchingF && this.sensor.touchingB)) {
 		const jump_speed = -20000;
 		this.body.applyLinearImpulse(new Vec2(0, jump_speed), this.body.getPosition());
 	}
+};
+
+Player.prototype.move = function (active, direction)
+{
+	const motor_speed = 100.0;
+
+	var motor = function (wheel, sensor) {
+		if (sensor) {
+			wheel.enableMotor(active);
+			wheel.setMotorSpeed(direction * motor_speed);
+		} else {
+			wheel.enableMotor(false);
+			wheel.setMotorSpeed(0);
+		}
+	}
+
+	motor(this.springBack, this.sensor.touchingB);
+	motor(this.springFront, this.sensor.touchingF);
 };
 
 Player.prototype.render = function (graphics)
