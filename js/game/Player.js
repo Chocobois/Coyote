@@ -10,8 +10,8 @@ function vector_angle(a, b) {
 function add_vector_to_verticies(p, verts) {
 	// for v in verts: yield add_vectors(p, v)
 	var new_verts = [];
-	verts.forEach(function(item, index, array){
-		new_verts.push(add_vectors, p, item);
+	verts.forEach(function(item){
+		new_verts.push(add_vectors(p, item));
 	});
 	return new_verts;
 }
